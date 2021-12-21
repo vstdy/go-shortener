@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,25 +33,16 @@ func shortenURL(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Location", fullURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	case http.MethodPost:
-		headerContentType := r.Header.Get("Content-Type")
-		if headerContentType != "application/x-www-form-urlencoded" {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
-			return
-		}
-		if err := r.ParseForm(); err != nil {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		body := r.PostForm["url"]
-		if body == nil {
-			http.Error(w, "Request must have 'url' field", http.StatusBadRequest)
 			return
 		}
 		id++
 		shortenedID := strconv.Itoa(id)
-		urls[shortenedID] = shortenedURL{shortenedID, body[0]}
+		urls[shortenedID] = shortenedURL{shortenedID, string(body)}
 		w.WriteHeader(http.StatusCreated)
-		_, _ = w.Write([]byte(r.Host + "/" + urls[shortenedID].ID))
+		_, _ = w.Write([]byte("http://" + r.Host + "/" + urls[shortenedID].ID))
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
