@@ -10,9 +10,9 @@ import (
 
 var id int
 
-var urls = make(map[string]shortenedURL)
+var storage = make(map[string]storageURL)
 
-type shortenedURL struct {
+type storageURL struct {
 	ID  string `json:"id"`
 	URL string `json:"url"`
 }
@@ -25,7 +25,7 @@ func shortenURL(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		fullURL := urls[path[1]].URL
+		fullURL := storage[path[1]].URL
 		if fullURL == "" {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
@@ -39,10 +39,11 @@ func shortenURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id++
-		shortenedID := strconv.Itoa(id)
-		urls[shortenedID] = shortenedURL{shortenedID, string(body)}
+		urlID := strconv.Itoa(id)
+		storage[urlID] = storageURL{urlID, string(body)}
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)
-		_, _ = w.Write([]byte("http://" + r.Host + "/" + urls[shortenedID].ID))
+		_, _ = w.Write([]byte("http://" + r.Host + "/" + storage[urlID].ID))
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
