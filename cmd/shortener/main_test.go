@@ -3,53 +3,55 @@ package main
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
+	"github.com/vstdy0/go-project/api"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-func TestShortenURL(t *testing.T) {
+func TestShortener(t *testing.T) {
+	r := api.Router()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
 	type want struct {
 		code        int
 		response    string
 		contentType string
 	}
 	tests := []struct {
-		name    string
-		method  string
-		request string
-		body    string
-		want    want
+		name   string
+		method string
+		path   string
+		body   string
+		want   want
 	}{
 		{
-			name:    "test #1 | post link",
-			method:  http.MethodPost,
-			request: "/",
-			body:    "https://extremelylengthylink1.com/",
+			method: http.MethodPost,
+			path:   "/",
+			body:   "https://extremelylengthylink1.com/",
 			want: want{
 				code:        http.StatusCreated,
-				response:    "http://example.com/1",
+				response:    ts.URL + "/1",
 				contentType: "text/plain; charset=UTF-8",
 			},
 		},
 		{
-			name:    "test #2 | post link",
-			method:  http.MethodPost,
-			request: "/",
-			body:    "https://extremelylengthylink2.com/",
+			method: http.MethodPost,
+			path:   "/",
+			body:   "https://extremelylengthylink2.com/",
 			want: want{
 				code:        http.StatusCreated,
-				response:    "http://example.com/2",
+				response:    ts.URL + "/2",
 				contentType: "text/plain; charset=UTF-8",
 			},
 		},
 		{
-			name:    "test #3 | get link",
-			method:  http.MethodGet,
-			request: "/1",
-			body:    "",
+			method: http.MethodGet,
+			path:   "/1",
+			body:   "",
 			want: want{
 				code:        http.StatusTemporaryRedirect,
 				response:    "",
@@ -57,22 +59,31 @@ func TestShortenURL(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.method, tt.request, strings.NewReader(tt.body))
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(shortenURL)
-			h.ServeHTTP(w, request)
-			res := w.Result()
-
-			assert.Equal(t, tt.want.code, res.StatusCode)
-			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
-
-			body, err := io.ReadAll(res.Body)
-			require.NoError(t, err)
-			err = res.Body.Close()
-			require.NoError(t, err)
-			assert.Equal(t, tt.want.response, string(body))
-		})
+		resp, body := testRequest(t, ts, tt.method, tt.path, tt.body)
+		assert.Equal(t, tt.want.code, resp.StatusCode)
+		assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
+		assert.Equal(t, tt.want.response, body)
 	}
+}
+
+func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, strings.NewReader(body))
+	require.NoError(t, err)
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	return resp, string(respBody)
 }
