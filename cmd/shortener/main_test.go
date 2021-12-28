@@ -62,6 +62,7 @@ func TestShortener(t *testing.T) {
 
 	for _, tt := range tests {
 		resp, body := testRequest(t, ts, tt.method, tt.path, tt.body)
+		defer resp.Body.Close()
 		assert.Equal(t, tt.want.code, resp.StatusCode)
 		assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 		assert.Equal(t, tt.want.response, body)
