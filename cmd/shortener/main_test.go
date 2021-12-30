@@ -4,7 +4,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/service/shortener/v1"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,7 +14,11 @@ import (
 )
 
 func TestShortener(t *testing.T) {
-	r := api.Router()
+	svc, err := shortener.NewService(shortener.InMemoryStorage())
+	if err != nil {
+		log.Fatalf("Service init: %v", err)
+	}
+	r := api.Router(svc)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 

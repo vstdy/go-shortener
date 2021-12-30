@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/service/shortener/v1"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +12,12 @@ import (
 )
 
 func main() {
-	srv := api.Server()
+	svc, err := shortener.NewService(shortener.InMemoryStorage())
+	if err != nil {
+		log.Fatalf("Service init: %v", err)
+	}
+	router := api.Router(svc)
+	srv := api.NewServer(":8080", router)
 
 	idleConnsClosed := make(chan struct{})
 

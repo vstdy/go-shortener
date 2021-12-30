@@ -4,6 +4,6 @@ import (
 	"net/http"
 )
 
-func Server() *http.Server {
-	return &http.Server{Addr: ":8080", Handler: Router()}
+func NewServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{Addr: addr, Handler: handler}
 }
