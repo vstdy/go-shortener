@@ -32,6 +32,15 @@ func (s *Service) GetURL(id string) string {
 	return s.InMemory.Get(id)
 }
 
+func WithInMemoryStorage() Option {
+	return func(srv *Service) error {
+		im := inmemory.InMemory{}
+		im.URLS = make(map[string]inmemory.URLModel)
+		srv.InMemory = &im
+		return nil
+	}
+}
+
 func NewService(opts ...Option) (*Service, error) {
 	svc := &Service{}
 	for _, opt := range opts {
@@ -45,13 +54,4 @@ func NewService(opts ...Option) (*Service, error) {
 	}
 
 	return svc, nil
-}
-
-func InMemoryStorage() Option {
-	return func(srv *Service) error {
-		im := inmemory.InMemory{}
-		im.URLS = make(map[string]inmemory.URLModel)
-		srv.InMemory = &im
-		return nil
-	}
 }

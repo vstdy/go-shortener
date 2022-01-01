@@ -12,12 +12,11 @@ import (
 )
 
 func main() {
-	svc, err := shortener.NewService(shortener.InMemoryStorage())
+	svc, err := shortener.NewService(shortener.WithInMemoryStorage())
 	if err != nil {
-		log.Fatalf("Service init: %v", err)
+		panic(err)
 	}
-	router := api.Router(svc)
-	srv := api.NewServer(":8080", router)
+	srv := api.NewServer(":8080", svc)
 
 	idleConnsClosed := make(chan struct{})
 
