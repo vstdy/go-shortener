@@ -13,9 +13,11 @@ func Router(service shortener.URLService) chi.Router {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.StripSlashes)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", CreateShortcut(service))
+		r.Post("/api/shorten", CreateShortcut(service))
 		r.Get("/{id}", GetShortcut(service))
 	})
 	return r

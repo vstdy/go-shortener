@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vstdy0/go-project/api"
@@ -25,16 +26,18 @@ func TestShortener(t *testing.T) {
 		contentType string
 	}
 	tests := []struct {
-		name   string
-		method string
-		path   string
-		body   string
-		want   want
+		name        string
+		method      string
+		path        string
+		body        string
+		contentType string
+		want        want
 	}{
 		{
-			method: http.MethodPost,
-			path:   "/",
-			body:   "https://extremelylengthylink1.com/",
+			method:      http.MethodPost,
+			path:        "/",
+			body:        "https://extremelylengthylink1.com/",
+			contentType: "text/plain; charset=UTF-8",
 			want: want{
 				code:        http.StatusCreated,
 				response:    ts.URL + "/1",
@@ -42,19 +45,21 @@ func TestShortener(t *testing.T) {
 			},
 		},
 		{
-			method: http.MethodPost,
-			path:   "/",
-			body:   "https://extremelylengthylink2.com/",
+			method:      http.MethodPost,
+			path:        "/api/shorten",
+			body:        `{"url": "https://extremelylengthylink2.com/"}`,
+			contentType: "application/json",
 			want: want{
 				code:        http.StatusCreated,
-				response:    ts.URL + "/2",
-				contentType: "text/plain; charset=UTF-8",
+				response:    fmt.Sprintf(`{"result": "%s/%d"}`, ts.URL, 2),
+				contentType: "application/json",
 			},
 		},
 		{
-			method: http.MethodGet,
-			path:   "/1",
-			body:   "",
+			method:      http.MethodGet,
+			path:        "/1",
+			body:        "",
+			contentType: "",
 			want: want{
 				code:        http.StatusTemporaryRedirect,
 				response:    "",
@@ -64,7 +69,7 @@ func TestShortener(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		resp, body := testRequest(t, ts, tt.method, tt.path, tt.body)
+		resp, body := testRequest(t, ts, tt.method, tt.path, tt.body, tt.contentType)
 		defer resp.Body.Close()
 		assert.Equal(t, tt.want.code, resp.StatusCode)
 		assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
@@ -72,9 +77,10 @@ func TestShortener(t *testing.T) {
 	}
 }
 
-func testRequest(t *testing.T, ts *httptest.Server, method, path, body string) (*http.Response, string) {
+func testRequest(t *testing.T, ts *httptest.Server, method, path, body, contentType string) (*http.Response, string) {
 	req, err := http.NewRequest(method, ts.URL+path, strings.NewReader(body))
 	require.NoError(t, err)
+	req.Header.Set("Content-Type", contentType)
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

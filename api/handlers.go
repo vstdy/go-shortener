@@ -1,8 +1,11 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vstdy0/go-project/service/shortener"
+	"github.com/vstdy0/go-project/storage/inmemory"
 	"io"
 	"net/http"
 )
@@ -15,10 +18,28 @@ func CreateShortcut(service shortener.URLService) http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
-		id := service.AddURL(string(body))
-		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+
+		var url, res string
+		contentType := r.Header.Get("Content-Type")
+		switch contentType {
+		case "application/json":
+			var urlModel inmemory.URLModel
+			if err := json.Unmarshal(body, &urlModel); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			url = urlModel.URL
+			res = `{"result": "http://%s/%s"}`
+		default:
+			url = string(body)
+			res = "http://%s/%s"
+		}
+		id := service.AddURL(url)
+		res = fmt.Sprintf(res, r.Host, id)
+
+		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusCreated)
-		if _, err = w.Write([]byte("http://" + r.Host + "/" + id)); err != nil {
+		if _, err = w.Write([]byte(res)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
