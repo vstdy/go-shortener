@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/service/shortener/v1"
 	"io/ioutil"
 	"net/http"
@@ -14,9 +16,12 @@ import (
 )
 
 func TestShortener(t *testing.T) {
+	var cfg config.Config
+	err := env.Parse(&cfg)
+	require.NoError(t, err)
 	svc, err := shortener.NewService(shortener.WithInMemoryStorage())
 	require.NoError(t, err)
-	r := api.Router(svc)
+	r := api.Router(svc, cfg)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -40,7 +45,7 @@ func TestShortener(t *testing.T) {
 			contentType: "text/plain; charset=UTF-8",
 			want: want{
 				code:        http.StatusCreated,
-				response:    ts.URL + "/1",
+				response:    cfg.BaseURL + "/1",
 				contentType: "text/plain; charset=UTF-8",
 			},
 		},
@@ -51,7 +56,7 @@ func TestShortener(t *testing.T) {
 			contentType: "application/json",
 			want: want{
 				code:        http.StatusCreated,
-				response:    fmt.Sprintf(`{"result": "%s/%d"}`, ts.URL, 2),
+				response:    fmt.Sprintf(`{"result": "%s/%d"}`, cfg.BaseURL, 2),
 				contentType: "application/json",
 			},
 		},

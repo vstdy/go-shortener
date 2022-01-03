@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/service/shortener"
 	"github.com/vstdy0/go-project/storage/inmemory"
 	"io"
 	"net/http"
 )
 
-func CreateShortcut(service shortener.URLService) http.HandlerFunc {
+func CreateShortcut(service shortener.URLService, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -29,13 +30,13 @@ func CreateShortcut(service shortener.URLService) http.HandlerFunc {
 				return
 			}
 			url = urlModel.URL
-			res = `{"result": "http://%s/%s"}`
+			res = `{"result": "%s/%s"}`
 		default:
 			url = string(body)
-			res = "http://%s/%s"
+			res = "%s/%s"
 		}
 		id := service.AddURL(url)
-		res = fmt.Sprintf(res, r.Host, id)
+		res = fmt.Sprintf(res, cfg.BaseURL, id)
 
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusCreated)

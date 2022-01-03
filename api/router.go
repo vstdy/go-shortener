@@ -3,10 +3,11 @@ package api
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/service/shortener"
 )
 
-func Router(service shortener.URLService) chi.Router {
+func Router(service shortener.URLService, cfg config.Config) chi.Router {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -16,8 +17,8 @@ func Router(service shortener.URLService) chi.Router {
 	r.Use(middleware.StripSlashes)
 
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", CreateShortcut(service))
-		r.Post("/api/shorten", CreateShortcut(service))
+		r.Post("/", CreateShortcut(service, cfg))
+		r.Post("/api/shorten", CreateShortcut(service, cfg))
 		r.Get("/{id}", GetShortcut(service))
 	})
 	return r

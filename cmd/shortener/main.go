@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/caarlos0/env/v6"
 	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/service/shortener/v1"
 	"log"
 	"net/http"
@@ -12,11 +14,16 @@ import (
 )
 
 func main() {
+	var cfg config.Config
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 	svc, err := shortener.NewService(shortener.WithInMemoryStorage())
 	if err != nil {
 		panic(err)
 	}
-	srv := api.NewServer(":8080", svc)
+	srv := api.NewServer(svc, cfg)
 
 	idleConnsClosed := make(chan struct{})
 
