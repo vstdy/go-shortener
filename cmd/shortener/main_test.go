@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -19,11 +20,21 @@ func TestShortener(t *testing.T) {
 	var cfg config.Config
 	err := env.Parse(&cfg)
 	require.NoError(t, err)
+
+	cfg.FileStoragePath = "storage.txt"
+	defer os.Remove(cfg.FileStoragePath)
+
 	svc, err := shortener.NewService(shortener.WithInMemoryStorage())
 	require.NoError(t, err)
 	r := api.Router(svc, cfg)
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	inMemoryTS := httptest.NewServer(r)
+	defer inMemoryTS.Close()
+
+	svc, err = shortener.NewService(shortener.WithInFileStorage(cfg))
+	require.NoError(t, err)
+	r = api.Router(svc, cfg)
+	inFileTS := httptest.NewServer(r)
+	defer inFileTS.Close()
 
 	type want struct {
 		code        int
@@ -74,11 +85,16 @@ func TestShortener(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		resp, body := testRequest(t, ts, tt.method, tt.path, tt.body, tt.contentType)
-		defer resp.Body.Close()
-		assert.Equal(t, tt.want.code, resp.StatusCode)
-		assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
-		assert.Equal(t, tt.want.response, body)
+		memoryResp, memoryBody := testRequest(t, inMemoryTS, tt.method, tt.path, tt.body, tt.contentType)
+		defer memoryResp.Body.Close()
+		assert.Equal(t, tt.want.code, memoryResp.StatusCode)
+		assert.Equal(t, tt.want.contentType, memoryResp.Header.Get("Content-Type"))
+		assert.Equal(t, tt.want.response, memoryBody)
+		fileResp, fileBody := testRequest(t, inFileTS, tt.method, tt.path, tt.body, tt.contentType)
+		defer fileResp.Body.Close()
+		assert.Equal(t, tt.want.code, fileResp.StatusCode)
+		assert.Equal(t, tt.want.contentType, fileResp.Header.Get("Content-Type"))
+		assert.Equal(t, tt.want.response, fileBody)
 	}
 }
 

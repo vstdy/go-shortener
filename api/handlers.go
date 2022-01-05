@@ -35,7 +35,11 @@ func CreateShortcut(service shortener.URLService, cfg config.Config) http.Handle
 			url = string(body)
 			res = "%s/%s"
 		}
-		id := service.AddURL(url)
+		id, err := service.AddURL(url)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		res = fmt.Sprintf(res, cfg.BaseURL, id)
 
 		w.Header().Set("Content-Type", contentType)

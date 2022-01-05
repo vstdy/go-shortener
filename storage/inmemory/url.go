@@ -10,17 +10,18 @@ type InMemory struct {
 	URLS map[string]URLModel
 }
 
-func (im *InMemory) Has(id string) bool {
-	_, ok := im.URLS[id]
+func (inMemory *InMemory) Has(id string) bool {
+	_, ok := inMemory.URLS[id]
 	return ok
 }
 
-func (im *InMemory) Set(id, url string) {
-	im.URLS[id] = URLModel{ID: id, URL: url}
+func (inMemory *InMemory) Set(id, url string) (string, error) {
+	inMemory.URLS[id] = URLModel{ID: id, URL: url}
+	return id, nil
 }
 
-func (im *InMemory) Get(id string) string {
-	url, ok := im.URLS[id]
+func (inMemory *InMemory) Get(id string) string {
+	url, ok := inMemory.URLS[id]
 	if !ok {
 		return ""
 	}

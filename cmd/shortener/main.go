@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	svc, err := shortener.NewService(shortener.WithInMemoryStorage())
+	svc, err := shortener.NewService(shortener.WithInFileStorage(cfg))
 	if err != nil {
 		panic(err)
 	}
