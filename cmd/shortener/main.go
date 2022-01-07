@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
-	"github.com/caarlos0/env/v6"
-	"github.com/vstdy0/go-project/api"
-	"github.com/vstdy0/go-project/config"
-	"github.com/vstdy0/go-project/service/shortener/v1"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/caarlos0/env/v6"
+
+	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/cmd/root"
+	"github.com/vstdy0/go-project/config"
+	"github.com/vstdy0/go-project/service/shortener/v1"
 )
 
 func main() {
@@ -19,6 +22,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	flags := root.RootCmd.Flags()
+	flags.StringVarP(&cfg.ServerAddress, "server_address", "a", cfg.ServerAddress, "Set server address")
+	flags.StringVarP(&cfg.BaseURL, "base_url", "b", cfg.BaseURL, "Set base URL")
+	flags.StringVarP(&cfg.FileStoragePath, "file_storage_path", "f", cfg.FileStoragePath, "Set file storage path")
+	root.Execute()
+
 	svc, err := shortener.NewService(shortener.WithInFileStorage(cfg))
 	if err != nil {
 		panic(err)
