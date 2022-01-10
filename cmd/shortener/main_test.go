@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/cmd/root"
 	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/service/shortener/v1"
 	"io/ioutil"
@@ -17,8 +17,11 @@ import (
 )
 
 func TestShortener(t *testing.T) {
-	var cfg config.Config
-	err := env.Parse(&cfg)
+	cmd := root.NewRootCmd()
+	err := cmd.Execute()
+	require.NoError(t, err)
+
+	cfg, err := config.LoadEnvs()
 	require.NoError(t, err)
 
 	cfg.FileStoragePath = "storage.txt"
@@ -67,7 +70,7 @@ func TestShortener(t *testing.T) {
 			contentType: "application/json",
 			want: want{
 				code:        http.StatusCreated,
-				response:    fmt.Sprintf(`{"result": "%s/%d"}`, cfg.BaseURL, 2),
+				response:    fmt.Sprintf(`{"result":"%s/%d"}`, cfg.BaseURL, 2),
 				contentType: "application/json",
 			},
 		},

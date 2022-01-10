@@ -2,40 +2,38 @@ package root
 
 import (
 	"github.com/spf13/cobra"
-	"os"
+	"github.com/spf13/viper"
+	"github.com/vstdy0/go-project/config"
 )
 
-var RootCmd = &cobra.Command{
-	Use:   "go-project",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//Run: func(cmd *cobra.Command, args []string) { },
-}
-
-//Execute adds all child commands to the root command and sets flags appropriately.
-//This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := RootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+func NewRootCmd() *cobra.Command {
+	var rootCmd = &cobra.Command{
+		RunE: func(cmd *cobra.Command, args []string) error {
+			viper.AutomaticEnv()
+			err := viper.BindPFlag("server_address", cmd.Flags().Lookup("server_address"))
+			if err != nil {
+				return err
+			}
+			err = viper.BindPFlag("base_url", cmd.Flags().Lookup("base_url"))
+			if err != nil {
+				return err
+			}
+			err = viper.BindPFlag("file_storage_path", cmd.Flags().Lookup("file_storage_path"))
+			if err != nil {
+				return err
+			}
+			return nil
+		},
 	}
-}
+	cfgDefault := config.Config{
+		ServerAddress:   "127.0.0.1:8080",
+		BaseURL:         "http://127.0.0.1:8080",
+		FileStoragePath: "./storage/infile/storage.txt",
+	}
+	flags := rootCmd.Flags()
+	flags.StringVarP(&cfgDefault.ServerAddress, "server_address", "a", cfgDefault.ServerAddress, "Set server address")
+	flags.StringVarP(&cfgDefault.BaseURL, "base_url", "b", cfgDefault.BaseURL, "Set base URL")
+	flags.StringVarP(&cfgDefault.FileStoragePath, "file_storage_path", "f", cfgDefault.FileStoragePath, "Set file storage path")
 
-func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-project.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	//RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	return rootCmd
 }

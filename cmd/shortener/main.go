@@ -8,8 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/caarlos0/env/v6"
-
 	"github.com/vstdy0/go-project/api"
 	"github.com/vstdy0/go-project/cmd/root"
 	"github.com/vstdy0/go-project/config"
@@ -17,17 +15,16 @@ import (
 )
 
 func main() {
-	var cfg config.Config
-	err := env.Parse(&cfg)
+	cmd := root.NewRootCmd()
+	err := cmd.Execute()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
-	flags := root.RootCmd.Flags()
-	flags.StringVarP(&cfg.ServerAddress, "server_address", "a", cfg.ServerAddress, "Set server address")
-	flags.StringVarP(&cfg.BaseURL, "base_url", "b", cfg.BaseURL, "Set base URL")
-	flags.StringVarP(&cfg.FileStoragePath, "file_storage_path", "f", cfg.FileStoragePath, "Set file storage path")
-	root.Execute()
+	cfg, err := config.LoadEnvs()
+	if err != nil {
+		panic(err)
+	}
 
 	svc, err := shortener.NewService(shortener.WithInFileStorage(cfg))
 	if err != nil {
