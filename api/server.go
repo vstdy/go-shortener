@@ -8,5 +8,6 @@ import (
 
 func NewServer(svc *shortener.Service, cfg config.Config) *http.Server {
 	router := Router(svc, cfg)
+
 	return &http.Server{Addr: cfg.ServerAddress, Handler: router}
 }

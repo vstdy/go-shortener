@@ -13,5 +13,6 @@ type Config struct {
 func LoadEnvs() (Config, error) {
 	var cfg Config
 	err := viper.Unmarshal(&cfg)
+
 	return cfg, err
 }

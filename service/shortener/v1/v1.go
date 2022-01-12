@@ -25,6 +25,7 @@ func (s *Service) AddURL(url string) (string, error) {
 		return "", err
 	}
 	s.id++
+
 	return id, nil
 }
 
@@ -35,6 +36,7 @@ func (s *Service) GetURL(id string) string {
 func WithInMemoryStorage() Option {
 	return func(srv *Service) error {
 		srv.urlStorage = inmemory.NewInMemory()
+
 		return nil
 	}
 }
@@ -47,6 +49,7 @@ func WithInFileStorage(cfg config.Config) Option {
 		}
 		srv.id = id
 		srv.urlStorage = inFile
+
 		return nil
 	}
 }
