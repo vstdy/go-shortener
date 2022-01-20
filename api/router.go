@@ -16,6 +16,8 @@ func Router(service shortener.URLService, cfg config.Config) chi.Router {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
+	r.Use(gzipDecompressRequest)
+	r.Use(gzipCompressResponse)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.createShortcut)
