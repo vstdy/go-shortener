@@ -60,11 +60,13 @@ func NewRootCmd() (*cobra.Command, error) {
 		ServerAddress:   "127.0.0.1:8080",
 		BaseURL:         "http://127.0.0.1:8080",
 		FileStoragePath: "./storage/infile/storage.txt",
+		SecretKey:       "secret",
 	}
 
 	rootCmd.Flags().StringVarP(&cfgDefault.ServerAddress, "server_address", "a", cfgDefault.ServerAddress, "Set server address")
 	rootCmd.Flags().StringVarP(&cfgDefault.BaseURL, "base_url", "b", cfgDefault.BaseURL, "Set base URL")
 	rootCmd.Flags().StringVarP(&cfgDefault.FileStoragePath, "file_storage_path", "f", cfgDefault.FileStoragePath, "Set file storage path")
+	viper.SetDefault("secret_key", cfgDefault.SecretKey)
 
 	viper.AutomaticEnv()
 	if err := viper.BindPFlag("server_address", rootCmd.Flags().Lookup("server_address")); err != nil {
@@ -74,6 +76,9 @@ func NewRootCmd() (*cobra.Command, error) {
 		return nil, err
 	}
 	if err := viper.BindPFlag("file_storage_path", rootCmd.Flags().Lookup("file_storage_path")); err != nil {
+		return nil, err
+	}
+	if err := viper.BindEnv("secret_key"); err != nil {
 		return nil, err
 	}
 

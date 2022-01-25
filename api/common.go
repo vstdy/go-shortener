@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 )
 
-func (h Handler) jsonResponse(body []byte) ([]byte, error) {
-	var urlRequest ShortenURLRequest
+func (h Handler) jsonResponse(userID string, body []byte) ([]byte, error) {
+	var urlRequest shortenURLRequest
 	if err := json.Unmarshal(body, &urlRequest); err != nil {
 		return nil, err
 	}
-	id, err := h.service.AddURL(urlRequest.URL)
+	id, err := h.service.AddURL(userID, urlRequest.URL)
 	if err != nil {
 		return nil, err
 	}
-	res, err := json.Marshal(ShortenURLResponse{Result: h.cfg.BaseURL + "/" + id})
+	res, err := json.Marshal(shortenURLResponse{Result: h.cfg.BaseURL + "/" + id})
 	if err != nil {
 		return nil, err
 	}
@@ -21,8 +21,8 @@ func (h Handler) jsonResponse(body []byte) ([]byte, error) {
 	return res, nil
 }
 
-func (h Handler) plainResponse(body []byte) ([]byte, error) {
-	id, err := h.service.AddURL(string(body))
+func (h Handler) plainResponse(userID string, body []byte) ([]byte, error) {
+	id, err := h.service.AddURL(userID, string(body))
 	if err != nil {
 		return nil, err
 	}

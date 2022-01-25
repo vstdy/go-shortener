@@ -19,6 +19,7 @@ func TestShortener(t *testing.T) {
 	cfg, err := config.LoadEnvs()
 	require.NoError(t, err)
 
+	cfg.SecretKey = "test_secret"
 	cfg.FileStoragePath = "storage.txt"
 	defer os.Remove(cfg.FileStoragePath)
 

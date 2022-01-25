@@ -2,8 +2,14 @@ package api
 
 import (
 	"compress/gzip"
+	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
+	"encoding/base64"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -53,4 +59,51 @@ func gzipCompressResponse(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(fn)
+}
+
+type ctxKeyUserID int
+
+const userIDKey ctxKeyUserID = 0
+
+func cookieAuth(userID int, secretKey string) func(next http.Handler) http.Handler {
+	cookieName := "Authentication"
+	cipherKey := sha256.Sum256([]byte(secretKey))
+	aesBlock, _ := aes.NewCipher(cipherKey[:])
+	aesGCM, _ := cipher.NewGCM(aesBlock)
+	nonce := cipherKey[len(cipherKey)-aesGCM.NonceSize():]
+
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			switch cookie, _ := r.Cookie(cookieName); {
+			case cookie != nil:
+				encryptedValue, err := base64.StdEncoding.DecodeString(cookie.Value)
+				if err != nil {
+					break
+				}
+				decryptedValue, err := aesGCM.Open(nil, nonce, encryptedValue, nil)
+				if err != nil {
+					break
+				}
+
+				ctx = context.WithValue(ctx, userIDKey, string(decryptedValue))
+				next.ServeHTTP(w, r.WithContext(ctx))
+			default:
+				userID++
+				encryptedValue := aesGCM.Seal(nil, nonce, []byte(strconv.Itoa(userID)), nil)
+
+				cookie := http.Cookie{
+					Name:  cookieName,
+					Value: base64.StdEncoding.EncodeToString(encryptedValue),
+				}
+				http.SetCookie(w, &cookie)
+
+				ctx = context.WithValue(ctx, userIDKey, strconv.Itoa(userID))
+				next.ServeHTTP(w, r.WithContext(ctx))
+			}
+		}
+
+		return http.HandlerFunc(fn)
+	}
 }

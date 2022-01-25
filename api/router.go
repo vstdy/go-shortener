@@ -7,8 +7,8 @@ import (
 	"github.com/vstdy0/go-project/service/shortener"
 )
 
-func Router(service shortener.URLService, cfg config.Config) chi.Router {
-	h := NewHandler(service, cfg)
+func Router(svc shortener.URLService, cfg config.Config) chi.Router {
+	h := NewHandler(svc, cfg)
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -18,11 +18,13 @@ func Router(service shortener.URLService, cfg config.Config) chi.Router {
 	r.Use(middleware.StripSlashes)
 	r.Use(gzipDecompressRequest)
 	r.Use(gzipCompressResponse)
+	r.Use(cookieAuth(svc.GetUserID(), cfg.SecretKey))
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.createShortcut)
 		r.Post("/api/shorten", h.createShortcut)
 		r.Get("/{id}", h.getShortcut)
+		r.Get("/user/urls", h.getUserURLs)
 	})
 
 	return r
