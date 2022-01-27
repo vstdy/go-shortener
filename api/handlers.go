@@ -1,8 +1,10 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/service/shortener"
 	"io"
@@ -72,7 +74,7 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	var res []byte
 	urls := h.service.GetUserURLs(userID)
-	userURLs := fromCanonical(urls, h.cfg.BaseURL)
+	userURLs := userURLsFromCanonical(urls, h.cfg.BaseURL)
 
 	if userURLs != nil {
 		marshal, err := json.Marshal(userURLs)
@@ -87,6 +89,19 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := w.Write(res); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h Handler) getPing(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("pgx", h.cfg.DatabaseDSN)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	defer db.Close()
+
+	if err = db.Ping(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

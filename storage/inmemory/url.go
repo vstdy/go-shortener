@@ -2,37 +2,37 @@ package inmemory
 
 import (
 	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/storage"
+	inter "github.com/vstdy0/go-project/storage"
 	"sync"
 )
 
-var _ storage.URLStorage = (*InMemory)(nil)
+var _ inter.URLStorage = (*Storage)(nil)
 
-type InMemory struct {
+type Storage struct {
 	urls map[string]URL
 	sync.RWMutex
 }
 
-func (inMemory *InMemory) Has(id string) bool {
-	inMemory.RLock()
-	defer inMemory.RUnlock()
-	_, ok := inMemory.urls[id]
+func (storage *Storage) Has(id string) bool {
+	storage.RLock()
+	defer storage.RUnlock()
+	_, ok := storage.urls[id]
 
 	return ok
 }
 
-func (inMemory *InMemory) Set(id, userID, url string) (string, error) {
-	inMemory.Lock()
-	defer inMemory.Unlock()
-	inMemory.urls[id] = URL{ID: id, UserID: userID, URL: url}
+func (storage *Storage) Set(id, userID, url string) (string, error) {
+	storage.Lock()
+	defer storage.Unlock()
+	storage.urls[id] = URL{ID: id, UserID: userID, URL: url}
 
 	return id, nil
 }
 
-func (inMemory *InMemory) Get(id string) string {
-	inMemory.RLock()
-	defer inMemory.RUnlock()
-	url, ok := inMemory.urls[id]
+func (storage *Storage) Get(id string) string {
+	storage.RLock()
+	defer storage.RUnlock()
+	url, ok := storage.urls[id]
 	if !ok {
 		return ""
 	}
@@ -40,9 +40,9 @@ func (inMemory *InMemory) Get(id string) string {
 	return url.URL
 }
 
-func (inMemory *InMemory) GetUserURLs(userID string) []model.URL {
+func (storage *Storage) GetUserURLs(userID string) []model.URL {
 	var urls URLS
-	for _, v := range inMemory.urls {
+	for _, v := range storage.urls {
 		if v.UserID == userID {
 			urls = append(urls, v)
 		}
@@ -51,9 +51,9 @@ func (inMemory *InMemory) GetUserURLs(userID string) []model.URL {
 	return urls.ToCanonical()
 }
 
-func NewInMemory() *InMemory {
-	var inMemory InMemory
-	inMemory.urls = make(map[string]URL)
+func NewInMemory() *Storage {
+	var storage Storage
+	storage.urls = make(map[string]URL)
 
-	return &inMemory
+	return &storage
 }

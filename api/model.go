@@ -16,7 +16,7 @@ type userURL struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func fromCanonical(urls []model.URL, baseURL string) []userURL {
+func userURLsFromCanonical(urls []model.URL, baseURL string) []userURL {
 	var userURLs []userURL
 	for _, v := range urls {
 		userURLs = append(userURLs, userURL{ShortURL: baseURL + "/" + v.ID, OriginalURL: v.URL})

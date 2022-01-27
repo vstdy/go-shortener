@@ -25,6 +25,7 @@ func Router(svc shortener.URLService, cfg config.Config) chi.Router {
 		r.Post("/api/shorten", h.createShortcut)
 		r.Get("/{id}", h.getShortcut)
 		r.Get("/user/urls", h.getUserURLs)
+		r.Get("/ping", h.getPing)
 	})
 
 	return r

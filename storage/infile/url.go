@@ -5,43 +5,43 @@ import (
 	"encoding/json"
 	"github.com/vstdy0/go-project/config"
 	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/storage"
+	inter "github.com/vstdy0/go-project/storage"
 	"os"
 	"strconv"
 	"sync"
 )
 
-var _ storage.URLStorage = (*InFile)(nil)
+var _ inter.URLStorage = (*Storage)(nil)
 
-type InFile struct {
+type Storage struct {
 	encoder *json.Encoder
 	urls    map[string]URL
 	sync.RWMutex
 }
 
-func (inFile *InFile) Has(urlID string) bool {
-	inFile.RLock()
-	defer inFile.RUnlock()
-	_, ok := inFile.urls[urlID]
+func (storage *Storage) Has(urlID string) bool {
+	storage.RLock()
+	defer storage.RUnlock()
+	_, ok := storage.urls[urlID]
 
 	return ok
 }
 
-func (inFile *InFile) Set(urlID, userID, url string) (string, error) {
-	inFile.Lock()
-	defer inFile.Unlock()
-	inFile.urls[urlID] = URL{ID: urlID, UserID: userID, URL: url}
-	if err := inFile.encoder.Encode(inFile.urls[urlID]); err != nil {
+func (storage *Storage) Set(urlID, userID, url string) (string, error) {
+	storage.Lock()
+	defer storage.Unlock()
+	storage.urls[urlID] = URL{ID: urlID, UserID: userID, URL: url}
+	if err := storage.encoder.Encode(storage.urls[urlID]); err != nil {
 		return "", err
 	}
 
 	return urlID, nil
 }
 
-func (inFile *InFile) Get(urlID string) string {
-	inFile.RLock()
-	defer inFile.RUnlock()
-	url, ok := inFile.urls[urlID]
+func (storage *Storage) Get(urlID string) string {
+	storage.RLock()
+	defer storage.RUnlock()
+	url, ok := storage.urls[urlID]
 	if !ok {
 		return ""
 	}
@@ -49,9 +49,9 @@ func (inFile *InFile) Get(urlID string) string {
 	return url.URL
 }
 
-func (inFile *InFile) GetUserURLs(userID string) []model.URL {
+func (storage *Storage) GetUserURLs(userID string) []model.URL {
 	var urls URLS
-	for _, v := range inFile.urls {
+	for _, v := range storage.urls {
 		if v.UserID == userID {
 			urls = append(urls, v)
 		}
@@ -60,9 +60,9 @@ func (inFile *InFile) GetUserURLs(userID string) []model.URL {
 	return urls.ToCanonical()
 }
 
-func NewInFile(cfg config.Config) (*InFile, int, int, error) {
+func NewInFile(cfg config.Config) (*Storage, int, int, error) {
 	var (
-		inFile   InFile
+		storage  Storage
 		urlModel URL
 		urlID    int
 		userID   int
@@ -73,14 +73,14 @@ func NewInFile(cfg config.Config) (*InFile, int, int, error) {
 		return nil, 0, 0, err
 	}
 
-	inFile.urls = make(map[string]URL)
-	inFile.encoder = json.NewEncoder(file)
+	storage.urls = make(map[string]URL)
+	storage.encoder = json.NewEncoder(file)
 
 	for scanner := bufio.NewScanner(file); scanner.Scan(); {
 		if err := json.Unmarshal(scanner.Bytes(), &urlModel); err != nil {
 			return nil, 0, 0, err
 		}
-		inFile.urls[urlModel.ID] = urlModel
+		storage.urls[urlModel.ID] = urlModel
 		if entryUserID, err := strconv.Atoi(urlModel.UserID); urlModel.UserID != "" && err != nil {
 			return nil, 0, 0, err
 		} else if urlModel.UserID != "" && entryUserID > userID {
@@ -92,5 +92,5 @@ func NewInFile(cfg config.Config) (*InFile, int, int, error) {
 		return nil, 0, 0, err
 	}
 
-	return &inFile, urlID, userID, nil
+	return &storage, urlID, userID, nil
 }

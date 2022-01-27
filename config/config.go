@@ -9,6 +9,7 @@ type Config struct {
 	BaseURL         string `mapstructure:"BASE_URL"`
 	FileStoragePath string `mapstructure:"FILE_STORAGE_PATH"`
 	SecretKey       string `mapstructure:"SECRET_KEY"`
+	DatabaseDSN     string `mapstructure:"DATABASE_DSN"`
 }
 
 func LoadEnvs() (Config, error) {
