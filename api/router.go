@@ -3,11 +3,12 @@ package api
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/vstdy0/go-project/config"
+
+	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
 	"github.com/vstdy0/go-project/service/shortener"
 )
 
-func Router(svc shortener.URLService, cfg config.Config) chi.Router {
+func Router(svc shortener.URLService, cfg common.Config) chi.Router {
 	h := NewHandler(svc, cfg)
 	r := chi.NewRouter()
 
@@ -16,9 +17,10 @@ func Router(svc shortener.URLService, cfg config.Config) chi.Router {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
+	r.Use(middleware.Timeout(cfg.RequestTimeout))
 	r.Use(gzipDecompressRequest)
 	r.Use(gzipCompressResponse)
-	r.Use(cookieAuth(svc.GetUserID(), cfg.SecretKey))
+	r.Use(cookieAuth(cfg.SecretKey))
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.createShortcut)

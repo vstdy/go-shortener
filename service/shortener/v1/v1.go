@@ -1,80 +1,68 @@
 package shortener
 
 import (
+	"context"
 	"fmt"
-	"github.com/vstdy0/go-project/config"
+
+	"github.com/google/uuid"
+
 	"github.com/vstdy0/go-project/model"
 	"github.com/vstdy0/go-project/service/shortener"
-	"github.com/vstdy0/go-project/storage"
-	infile "github.com/vstdy0/go-project/storage/infile"
-	inmemory "github.com/vstdy0/go-project/storage/inmemory"
-	"strconv"
+	inter "github.com/vstdy0/go-project/storage"
 )
 
 var _ shortener.URLService = (*Service)(nil)
 
-type Service struct {
-	urlID      int
-	userID     int
-	urlStorage storage.URLStorage
+type (
+	Service struct {
+		storage inter.URLStorage
+	}
+
+	ServiceOption func(*Service)
+)
+
+func (s *Service) AddURL(ctx context.Context, userID uuid.UUID, url string) (int, error) {
+	urlModel, err := s.storage.Set(ctx, model.URL{UserID: userID, URL: url})
+	if err != nil {
+		return 0, err
+	}
+
+	return urlModel.ID, nil
 }
 
-type Option func(*Service) error
-
-func (s *Service) AddURL(userID, url string) (string, error) {
-	urlID, err := s.urlStorage.Set(strconv.Itoa(s.urlID+1), userID, url)
+func (s *Service) GetURL(ctx context.Context, id int) (string, error) {
+	urlModel, err := s.storage.Get(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	s.urlID++
 
-	return urlID, nil
+	return urlModel.URL, nil
 }
 
-func (s *Service) GetURL(id string) string {
-	return s.urlStorage.Get(id)
+func (s *Service) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
+	urls, err := s.storage.GetUserURLs(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return urls, nil
 }
 
-func (s *Service) GetUserURLs(userID string) []model.URL {
-	return s.urlStorage.GetUserURLs(userID)
-}
-
-func (s *Service) GetUserID() int {
-	return s.userID
-}
-
-func WithInMemoryStorage() Option {
-	return func(srv *Service) error {
-		srv.urlStorage = inmemory.NewInMemory()
-
-		return nil
+// WithStorage sets Storage.
+func WithStorage(st inter.URLStorage) ServiceOption {
+	return func(svc *Service) {
+		svc.storage = st
 	}
 }
 
-func WithInFileStorage(cfg config.Config) Option {
-	return func(srv *Service) error {
-		inFile, urlID, userID, err := infile.NewInFile(cfg)
-		if err != nil {
-			return err
-		}
-		srv.urlID = urlID
-		srv.userID = userID
-		srv.urlStorage = inFile
-
-		return nil
-	}
-}
-
-func NewService(opts ...Option) (*Service, error) {
+func NewService(opts ...ServiceOption) (*Service, error) {
 	svc := &Service{}
 	for _, opt := range opts {
-		if err := opt(svc); err != nil {
-			return nil, fmt.Errorf("initialising dependencies: %w", err)
-		}
+		opt(svc)
 	}
 
-	if svc.urlStorage == nil {
-		return nil, fmt.Errorf("urlStorage: nil")
+	if svc.storage == nil {
+		return nil, fmt.Errorf("storage: nil")
 	}
 
 	return svc, nil

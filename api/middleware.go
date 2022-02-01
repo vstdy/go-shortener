@@ -9,8 +9,9 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type gzipResponseWriter struct {
@@ -65,7 +66,7 @@ type ctxKeyUserID int
 
 const userIDKey ctxKeyUserID = 0
 
-func cookieAuth(userID int, secretKey string) func(next http.Handler) http.Handler {
+func cookieAuth(secretKey string) func(next http.Handler) http.Handler {
 	cookieName := "Authentication"
 	cipherKey := sha256.Sum256([]byte(secretKey))
 	aesBlock, _ := aes.NewCipher(cipherKey[:])
@@ -86,20 +87,25 @@ func cookieAuth(userID int, secretKey string) func(next http.Handler) http.Handl
 				if err != nil {
 					break
 				}
+				userID, err := uuid.ParseBytes(decryptedValue)
+				if err != nil {
+					break
+				}
 
-				ctx = context.WithValue(ctx, userIDKey, string(decryptedValue))
+				ctx = context.WithValue(ctx, userIDKey, userID)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			default:
-				userID++
-				encryptedValue := aesGCM.Seal(nil, nonce, []byte(strconv.Itoa(userID)), nil)
+				userID := uuid.New()
+				encryptedValue := aesGCM.Seal(nil, nonce, []byte(userID.String()), nil)
 
 				cookie := http.Cookie{
 					Name:  cookieName,
 					Value: base64.StdEncoding.EncodeToString(encryptedValue),
+					Path:  "/",
 				}
 				http.SetCookie(w, &cookie)
 
-				ctx = context.WithValue(ctx, userIDKey, strconv.Itoa(userID))
+				ctx = context.WithValue(ctx, userIDKey, userID)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			}
 		}

@@ -1,16 +1,29 @@
-package inmemory
+package schema
 
-import "github.com/vstdy0/go-project/model"
+import (
+	"github.com/google/uuid"
+
+	"github.com/vstdy0/go-project/model"
+)
 
 type (
 	URL struct {
-		ID     string `json:"id"`
-		UserID string `json:"user_id"`
-		URL    string `json:"url"`
+		ID     int       `json:"id"`
+		UserID uuid.UUID `json:"user_id"`
+		URL    string    `json:"url"`
 	}
 
 	URLS []URL
 )
+
+// NewURLFromCanonical creates a new URL DB object from canonical model.
+func NewURLFromCanonical(obj model.URL) URL {
+	return URL{
+		ID:     obj.ID,
+		UserID: obj.UserID,
+		URL:    obj.URL,
+	}
+}
 
 // ToCanonical converts a DB object to canonical model.
 func (u URL) ToCanonical() model.URL {
