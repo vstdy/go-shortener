@@ -13,7 +13,6 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 
 	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/pkg"
 	inter "github.com/vstdy0/go-project/storage"
 	"github.com/vstdy0/go-project/storage/psql/schema"
 )
@@ -39,27 +38,23 @@ func (st *Storage) Has(ctx context.Context, id int) (bool, error) {
 	return exists, err
 }
 
-func (st *Storage) Set(ctx context.Context, url model.URL) (model.URL, error) {
-	dbObj := schema.NewURLFromCanonical(url)
-	dbObj.ID = 0
+func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, error) {
+	dbObjs := schema.NewURLsFromCanonical(urls)
 
 	_, err := st.db.NewInsert().
-		Model(&dbObj).
+		Model(&dbObjs).
 		Returning("*").
 		Exec(ctx)
 	if err != nil {
-		pgErr := &pgdriver.Error{}
-		if errors.As(err, pgErr) {
-			if pgErr.IntegrityViolation() {
-				return model.URL{}, fmt.Errorf("%w: user_id not found", pkg.ErrNotExists)
-			}
-		}
-		return model.URL{}, err
+		return nil, err
 	}
 
-	obj := dbObj.ToCanonical()
+	objs, err := dbObjs.ToCanonical()
+	if err != nil {
+		return nil, err
+	}
 
-	return obj, nil
+	return objs, nil
 }
 
 func (st *Storage) Get(ctx context.Context, id int) (model.URL, error) {
@@ -83,7 +78,6 @@ func (st *Storage) Get(ctx context.Context, id int) (model.URL, error) {
 }
 
 func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
-
 	var dbObjs schema.URLS
 
 	err := st.db.NewSelect().

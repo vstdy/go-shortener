@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
 
+	"github.com/vstdy0/go-project/api/model"
 	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
 	"github.com/vstdy0/go-project/service/shortener"
 )
@@ -24,7 +25,7 @@ func NewHandler(service shortener.URLService, cfg common.Config) Handler {
 	return Handler{service: service, cfg: cfg}
 }
 
-func (h Handler) createShortcut(w http.ResponseWriter, r *http.Request) {
+func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
 		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
@@ -42,9 +43,9 @@ func (h Handler) createShortcut(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	switch contentType {
 	case "application/json":
-		res, err = h.jsonResponse(r.Context(), userID, body)
+		res, err = h.jsonURLResponse(r.Context(), userID, body)
 	default:
-		res, err = h.plainResponse(r.Context(), userID, body)
+		res, err = h.plainURLResponse(r.Context(), userID, body)
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -59,7 +60,41 @@ func (h Handler) createShortcut(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) getShortcut(w http.ResponseWriter, r *http.Request) {
+func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
+		return
+	}
+
+	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	res, err := h.urlsBatchResponse(r.Context(), userID, body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusCreated)
+	if _, err = w.Write(res); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h Handler) getShortenURL(w http.ResponseWriter, r *http.Request) {
 	urlID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -79,7 +114,7 @@ func (h Handler) getShortcut(w http.ResponseWriter, r *http.Request) {
 func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
 		return
 	}
 
@@ -89,7 +124,7 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userURLs := userURLsFromCanonical(urls, h.cfg.BaseURL)
+	userURLs := model.UserURLsFromCanonical(urls, h.cfg.BaseURL)
 
 	var res []byte
 	if userURLs != nil {

@@ -10,7 +10,7 @@ import (
 
 type URLStorage interface {
 	Has(ctx context.Context, urlID int) (bool, error)
-	Set(ctx context.Context, url model.URL) (model.URL, error)
+	Set(ctx context.Context, urls []model.URL) ([]model.URL, error)
 	Get(ctx context.Context, urlID int) (model.URL, error)
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
 }

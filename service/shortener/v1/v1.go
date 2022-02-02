@@ -21,13 +21,26 @@ type (
 	ServiceOption func(*Service)
 )
 
-func (s *Service) AddURL(ctx context.Context, userID uuid.UUID, url string) (int, error) {
-	urlModel, err := s.storage.Set(ctx, model.URL{UserID: userID, URL: url})
+func (s *Service) AddURL(ctx context.Context, url *model.URL) error {
+	urlsModel, err := s.storage.Set(ctx, []model.URL{*url})
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return urlModel.ID, nil
+	url.ID = urlsModel[0].ID
+
+	return nil
+}
+
+func (s *Service) AddBatchURLs(ctx context.Context, urls *[]model.URL) error {
+	urlsModel, err := s.storage.Set(ctx, *urls)
+	if err != nil {
+		return err
+	}
+
+	*urls = urlsModel
+
+	return nil
 }
 
 func (s *Service) GetURL(ctx context.Context, id int) (string, error) {

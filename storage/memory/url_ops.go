@@ -28,19 +28,22 @@ func (st *Storage) Has(ctx context.Context, urlID int) (bool, error) {
 	return ok, nil
 }
 
-func (st *Storage) Set(ctx context.Context, url model.URL) (model.URL, error) {
+func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, error) {
 	st.Lock()
 	defer st.Unlock()
 
-	dbObj := schema.NewURLFromCanonical(url)
-	dbObj.ID = st.id
+	dbObjs := schema.NewURLsFromCanonical(urls)
 
-	st.urls[dbObj.ID] = dbObj
-	st.id++
+	for idx := range dbObjs {
+		dbObjs[idx].ID = st.id
 
-	obj := dbObj.ToCanonical()
+		st.urls[dbObjs[idx].ID] = dbObjs[idx]
+		st.id++
+	}
 
-	return obj, nil
+	objs := dbObjs.ToCanonical()
+
+	return objs, nil
 }
 
 func (st *Storage) Get(ctx context.Context, urlID int) (model.URL, error) {

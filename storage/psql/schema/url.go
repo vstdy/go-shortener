@@ -11,6 +11,7 @@ type (
 	URL struct {
 		bun.BaseModel `bun:"url,alias:u"`
 		ID            int       `bun:"id,pk,autoincrement"`
+		CorrelationID string    `bun:"-"`
 		UserID        uuid.UUID `bun:"user_id,type:uuid,notnull"`
 		URL           string    `bun:"url,notnull"`
 	}
@@ -18,21 +19,28 @@ type (
 	URLS []URL
 )
 
-// NewURLFromCanonical creates a new URL DB object from canonical model.
-func NewURLFromCanonical(obj model.URL) URL {
-	return URL{
-		ID:     obj.ID,
-		UserID: obj.UserID,
-		URL:    obj.URL,
+// NewURLsFromCanonical creates new list of URL DB objects from canonical model.
+func NewURLsFromCanonical(objs []model.URL) URLS {
+	var urls URLS
+	for _, url := range objs {
+		urls = append(urls, URL{
+			ID:            url.ID,
+			CorrelationID: url.CorrelationID,
+			UserID:        url.UserID,
+			URL:           url.URL,
+		})
 	}
+
+	return urls
 }
 
 // ToCanonical converts a DB object to canonical model.
 func (u URL) ToCanonical() model.URL {
 	obj := model.URL{
-		ID:     u.ID,
-		UserID: u.UserID,
-		URL:    u.URL,
+		ID:            u.ID,
+		CorrelationID: u.CorrelationID,
+		UserID:        u.UserID,
+		URL:           u.URL,
 	}
 
 	return obj

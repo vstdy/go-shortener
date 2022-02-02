@@ -29,38 +29,42 @@ type (
 	StorageOption func(st *Storage) error
 )
 
-func (storage *Storage) Has(ctx context.Context, urlID int) (bool, error) {
-	storage.RLock()
-	defer storage.RUnlock()
+func (st *Storage) Has(ctx context.Context, urlID int) (bool, error) {
+	st.RLock()
+	defer st.RUnlock()
 
-	_, ok := storage.urls[urlID]
+	_, ok := st.urls[urlID]
 
 	return ok, nil
 }
 
-func (storage *Storage) Set(ctx context.Context, url model.URL) (model.URL, error) {
-	storage.Lock()
-	defer storage.Unlock()
+func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, error) {
+	st.Lock()
+	defer st.Unlock()
 
-	dbObj := schema.NewURLFromCanonical(url)
-	dbObj.ID = storage.id
+	dbObjs := schema.NewURLsFromCanonical(urls)
 
-	if err := storage.encoder.Encode(dbObj); err != nil {
-		return model.URL{}, err
+	for idx := range dbObjs {
+		dbObjs[idx].ID = st.id
+
+		if err := st.encoder.Encode(dbObjs[idx]); err != nil {
+			return nil, err
+		}
+
+		st.urls[dbObjs[idx].ID] = dbObjs[idx]
+		st.id++
 	}
-	storage.urls[dbObj.ID] = dbObj
-	storage.id++
 
-	obj := dbObj.ToCanonical()
+	objs := dbObjs.ToCanonical()
 
-	return obj, nil
+	return objs, nil
 }
 
-func (storage *Storage) Get(ctx context.Context, urlID int) (model.URL, error) {
-	storage.RLock()
-	defer storage.RUnlock()
+func (st *Storage) Get(ctx context.Context, urlID int) (model.URL, error) {
+	st.RLock()
+	defer st.RUnlock()
 
-	url, ok := storage.urls[urlID]
+	url, ok := st.urls[urlID]
 	if !ok {
 		return model.URL{}, fmt.Errorf("url does not exist")
 	}
@@ -68,9 +72,9 @@ func (storage *Storage) Get(ctx context.Context, urlID int) (model.URL, error) {
 	return url.ToCanonical(), nil
 }
 
-func (storage *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
+func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	var urls schema.URLS
-	for _, v := range storage.urls {
+	for _, v := range st.urls {
 		if v.UserID == userID {
 			urls = append(urls, v)
 		}

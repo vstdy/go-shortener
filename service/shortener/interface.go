@@ -9,7 +9,8 @@ import (
 )
 
 type URLService interface {
-	AddURL(ctx context.Context, userID uuid.UUID, url string) (int, error)
+	AddURL(ctx context.Context, url *model.URL) error
+	AddBatchURLs(ctx context.Context, urls *[]model.URL) error
 	GetURL(ctx context.Context, urlID int) (string, error)
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
 }

@@ -23,9 +23,10 @@ func Router(svc shortener.URLService, cfg common.Config) chi.Router {
 	r.Use(cookieAuth(cfg.SecretKey))
 
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", h.createShortcut)
-		r.Post("/api/shorten", h.createShortcut)
-		r.Get("/{id}", h.getShortcut)
+		r.Post("/", h.shortenURL)
+		r.Post("/api/shorten", h.shortenURL)
+		r.Post("/api/shorten/batch", h.shortenBatchURLs)
+		r.Get("/{id}", h.getShortenURL)
 		r.Get("/user/urls", h.getUserURLs)
 		r.Get("/ping", h.getPing)
 	})
