@@ -3,12 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -17,6 +18,7 @@ import (
 )
 
 const (
+	flagLogLevel        = "log-level"
 	flagRequestTimeout  = "timeout"
 	flagServerAddress   = "server_address"
 	flagBaseURL         = "base_url"
@@ -35,6 +37,10 @@ func Execute() error {
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := setupLogger(cmd); err != nil {
+				return fmt.Errorf("app initialization: %w", err)
+			}
+
 			if err := setupConfig(cmd); err != nil {
 				return fmt.Errorf("app initialization: %w", err)
 			}
@@ -54,6 +60,11 @@ func newRootCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
+			defer func() {
+				if err := svc.Close(); err != nil {
+					log.Error().Err(err).Msg("Shutting down the app")
+				}
+			}()
 
 			srv := api.NewServer(svc, cfg)
 
@@ -68,15 +79,15 @@ func newRootCmd() *cobra.Command {
 				defer cancel()
 
 				if err := srv.Shutdown(ctx); err != nil {
-					log.Printf("Server shutdown failed: %v", err)
+					log.Error().Err(err).Msg("Server shutdown failed")
 				}
-				log.Println("Server stopped")
+				log.Info().Msg("Server stopped")
 
 				close(idleConnsClosed)
 			}()
 
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-				log.Printf("HTTP server ListenAndServe: %v", err)
+				log.Error().Err(err).Msg("HTTP server ListenAndServe")
 			}
 
 			<-idleConnsClosed
@@ -85,14 +96,35 @@ func newRootCmd() *cobra.Command {
 		},
 	}
 
+	cmd.PersistentFlags().String(flagLogLevel, "info", "Logger level [debug,info,warn,error,fatal]")
 	cmd.PersistentFlags().Duration(flagRequestTimeout, 5*time.Second, "Request timeout")
 	cmd.PersistentFlags().StringP(flagServerAddress, "a", "127.0.0.1:8080", "Server address")
 	cmd.PersistentFlags().StringP(flagBaseURL, "b", "http://127.0.0.1:8080", "Base URL")
 	cmd.PersistentFlags().StringP(flagFileStoragePath, "f", "./storage/file/storage.txt", "File storage path")
 	cmd.PersistentFlags().StringP(flagDatabaseDSN, "d", "", "Database source name")
-	cmd.PersistentFlags().StringP(flagStorage, "s", "psql", "Storage type [memory, file, psql]")
+	cmd.PersistentFlags().StringP(flagStorage, "s", "", "Storage type [memory, file, psql]")
 
 	return cmd
+}
+
+// setupLogger configures global logger.
+func setupLogger(cmd *cobra.Command) error {
+	logLevelBz, err := cmd.Flags().GetString(flagLogLevel)
+	if err != nil {
+		return fmt.Errorf("%s flag reading: %w", flagLogLevel, err)
+	}
+	logLevel, err := zerolog.ParseLevel(logLevelBz)
+	if err != nil {
+		return fmt.Errorf("%s flag parsing: %w", flagLogLevel, err)
+	}
+
+	logWriter := zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.RFC3339,
+	}
+	log.Logger = log.Output(logWriter).Level(logLevel)
+
+	return nil
 }
 
 // setupConfig reads app config and stores it to cobra.Command context.

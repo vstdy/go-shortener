@@ -2,6 +2,7 @@ package shortener
 
 import (
 	"context"
+	"io"
 
 	"github.com/google/uuid"
 
@@ -9,8 +10,11 @@ import (
 )
 
 type URLService interface {
-	AddURL(ctx context.Context, url *model.URL) error
-	AddBatchURLs(ctx context.Context, urls *[]model.URL) error
+	io.Closer
+
+	AddURL(ctx context.Context, url *model.URL) (error, error)
+	AddBatchURLs(ctx context.Context, urls *[]model.URL) (error, error)
 	GetURL(ctx context.Context, urlID int) (string, error)
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
+	GetPing() error
 }

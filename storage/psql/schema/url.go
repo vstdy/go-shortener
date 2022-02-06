@@ -13,7 +13,7 @@ type (
 		ID            int       `bun:"id,pk,autoincrement"`
 		CorrelationID string    `bun:"-"`
 		UserID        uuid.UUID `bun:"user_id,type:uuid,notnull"`
-		URL           string    `bun:"url,notnull"`
+		URL           string    `bun:"url,unique,notnull"`
 	}
 
 	URLS []URL

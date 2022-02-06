@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/vstdy0/go-project/api/model"
 	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
+	"github.com/vstdy0/go-project/pkg"
 	"github.com/vstdy0/go-project/service/shortener"
 )
 
@@ -47,13 +47,18 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	default:
 		res, err = h.plainURLResponse(r.Context(), userID, body)
 	}
-	if err != nil {
+	switch err {
+	case pkg.ErrUniqueViolation:
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(http.StatusConflict)
+	case nil:
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(http.StatusCreated)
+	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", contentType)
-	w.WriteHeader(http.StatusCreated)
 	if _, err = w.Write(res); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -81,13 +86,18 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	res, err := h.urlsBatchResponse(r.Context(), userID, body)
-	if err != nil {
+	switch err {
+	case pkg.ErrUniqueViolation:
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(http.StatusConflict)
+	case nil:
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(http.StatusCreated)
+	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", contentType)
-	w.WriteHeader(http.StatusCreated)
 	if _, err = w.Write(res); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -146,14 +156,7 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) getPing(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("pgx", h.cfg.PSQLStorage.DSN)
-	if err != nil {
+	if err := h.service.GetPing(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	defer db.Close()
-
-	if err = db.Ping(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 }

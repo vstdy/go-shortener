@@ -5,7 +5,10 @@ go 1.17
 require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/google/uuid v1.1.2
+	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgx/v4 v4.14.1
+	github.com/lib/pq v1.10.2
+	github.com/rs/zerolog v1.15.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.7.0

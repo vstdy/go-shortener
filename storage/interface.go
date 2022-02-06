@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"io"
 
 	"github.com/google/uuid"
 
@@ -9,8 +10,11 @@ import (
 )
 
 type URLStorage interface {
-	Has(ctx context.Context, urlID int) (bool, error)
-	Set(ctx context.Context, urls []model.URL) ([]model.URL, error)
-	Get(ctx context.Context, urlID int) (model.URL, error)
+	io.Closer
+
+	HasURL(ctx context.Context, urlID int) (bool, error)
+	AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error, error)
+	GetURL(ctx context.Context, urlID int) (model.URL, error)
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
+	GetPing() error
 }

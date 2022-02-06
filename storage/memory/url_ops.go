@@ -3,24 +3,15 @@ package memory
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/google/uuid"
 
 	"github.com/vstdy0/go-project/model"
-	inter "github.com/vstdy0/go-project/storage"
 	"github.com/vstdy0/go-project/storage/memory/schema"
 )
 
-var _ inter.URLStorage = (*Storage)(nil)
-
-type Storage struct {
-	id   int
-	urls map[int]schema.URL
-	sync.RWMutex
-}
-
-func (st *Storage) Has(ctx context.Context, urlID int) (bool, error) {
+// HasURL checks existence of the object with given id
+func (st *Storage) HasURL(ctx context.Context, urlID int) (bool, error) {
 	st.RLock()
 	defer st.RUnlock()
 	_, ok := st.urls[urlID]
@@ -28,7 +19,8 @@ func (st *Storage) Has(ctx context.Context, urlID int) (bool, error) {
 	return ok, nil
 }
 
-func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, error) {
+// AddURLS adds given objects to storage
+func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error, error) {
 	st.Lock()
 	defer st.Unlock()
 
@@ -43,10 +35,11 @@ func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, erro
 
 	objs := dbObjs.ToCanonical()
 
-	return objs, nil
+	return objs, nil, nil
 }
 
-func (st *Storage) Get(ctx context.Context, urlID int) (model.URL, error) {
+// GetURL gets object with given id
+func (st *Storage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 	st.RLock()
 	defer st.RUnlock()
 	url, ok := st.urls[urlID]
@@ -57,6 +50,7 @@ func (st *Storage) Get(ctx context.Context, urlID int) (model.URL, error) {
 	return url.ToCanonical(), nil
 }
 
+// GetUserURLs gets current user objects
 func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	var urls schema.URLS
 	for _, v := range st.urls {
@@ -66,12 +60,4 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	}
 
 	return urls.ToCanonical(), nil
-}
-
-func New() (*Storage, error) {
-	var st Storage
-	st.urls = make(map[int]schema.URL)
-	st.id = 1
-
-	return &st, nil
 }

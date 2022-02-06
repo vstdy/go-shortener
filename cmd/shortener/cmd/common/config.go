@@ -22,8 +22,8 @@ type Config struct {
 }
 
 const (
-	fileStorage = "file"
-	psqlStorage = "psql"
+	memoryStorage = "memory"
+	fileStorage   = "file"
 )
 
 // BuildMemoryStorage builds memory.Storage dependency.
@@ -66,18 +66,18 @@ func (c Config) BuildService(storageType string) (*shortener.Service, error) {
 	var err error
 
 	switch storageType {
+	case memoryStorage:
+		st, err = c.BuildMemoryStorage()
 	case fileStorage:
 		st, err = c.BuildFileStorage()
-	case psqlStorage:
-		st, err = c.BuildPsqlStorage()
 	default:
-		st, err = c.BuildMemoryStorage()
+		st, err = c.BuildPsqlStorage()
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	svc, err := shortener.NewService(shortener.WithStorage(st))
+	svc, err := shortener.New(shortener.WithStorage(st))
 	if err != nil {
 		return nil, fmt.Errorf("building service: %w", err)
 	}

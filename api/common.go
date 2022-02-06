@@ -18,7 +18,8 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 	}
 
 	obj := req.ToCanonical(userID)
-	if err := h.service.AddURL(ctx, &obj); err != nil {
+	pgErr, err := h.service.AddURL(ctx, &obj)
+	if err != nil {
 		return nil, err
 	}
 
@@ -27,7 +28,7 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 		return nil, err
 	}
 
-	return res, nil
+	return res, pgErr
 }
 
 func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
@@ -36,11 +37,12 @@ func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []
 	}
 
 	obj := req.ToCanonical(userID)
-	if err := h.service.AddURL(ctx, &obj); err != nil {
+	pgErr, err := h.service.AddURL(ctx, &obj)
+	if err != nil {
 		return nil, err
 	}
 
-	return []byte(h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)), nil
+	return []byte(h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)), pgErr
 }
 
 func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
@@ -54,7 +56,8 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 		return nil, err
 	}
 
-	if err = h.service.AddBatchURLs(ctx, &objs); err != nil {
+	pgErr, err := h.service.AddBatchURLs(ctx, &objs)
+	if err != nil {
 		return nil, err
 	}
 
@@ -65,5 +68,5 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 		return nil, err
 	}
 
-	return res, nil
+	return res, pgErr
 }

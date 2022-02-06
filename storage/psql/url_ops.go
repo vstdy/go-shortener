@@ -5,31 +5,18 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"runtime"
 
 	"github.com/google/uuid"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/jackc/pgerrcode"
 	"github.com/uptrace/bun/driver/pgdriver"
 
 	"github.com/vstdy0/go-project/model"
-	inter "github.com/vstdy0/go-project/storage"
+	"github.com/vstdy0/go-project/pkg"
 	"github.com/vstdy0/go-project/storage/psql/schema"
 )
 
-var _ inter.URLStorage = (*Storage)(nil)
-
-type (
-	Storage struct {
-		config Config
-		db     *bun.DB
-	}
-
-	StorageOption func(st *Storage) error
-)
-
-// Has checks existence of the object with given id
-func (st *Storage) Has(ctx context.Context, id int) (bool, error) {
+// HasURL checks existence of the object with given id
+func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 	exists, err := st.db.NewSelect().
 		Model(&schema.URL{}).
 		Where("id = ?", id).
@@ -38,7 +25,9 @@ func (st *Storage) Has(ctx context.Context, id int) (bool, error) {
 	return exists, err
 }
 
-func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, error) {
+// AddURLS adds given objects to storage
+func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error, error) {
+	var pgErr error
 	dbObjs := schema.NewURLsFromCanonical(urls)
 
 	_, err := st.db.NewInsert().
@@ -46,18 +35,33 @@ func (st *Storage) Set(ctx context.Context, urls []model.URL) ([]model.URL, erro
 		Returning("*").
 		Exec(ctx)
 	if err != nil {
-		return nil, err
+		if err, ok := err.(pgdriver.Error); ok &&
+			err.Field('C') == pgerrcode.UniqueViolation {
+			_, err := st.db.NewInsert().
+				Model(&dbObjs).
+				On("CONFLICT (url) DO UPDATE").
+				Returning("*").
+				Exec(ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			pgErr = pkg.ErrUniqueViolation
+		} else {
+			return nil, nil, err
+		}
 	}
 
 	objs, err := dbObjs.ToCanonical()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return objs, nil
+	return objs, pgErr, nil
 }
 
-func (st *Storage) Get(ctx context.Context, id int) (model.URL, error) {
+// GetURL gets object with given id
+func (st *Storage) GetURL(ctx context.Context, id int) (model.URL, error) {
 	dbObj := &schema.URL{}
 
 	err := st.db.NewSelect().
@@ -77,6 +81,7 @@ func (st *Storage) Get(ctx context.Context, id int) (model.URL, error) {
 	return obj, nil
 }
 
+// GetUserURLs gets current user objects
 func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	var dbObjs schema.URLS
 
@@ -97,55 +102,4 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	}
 
 	return objs, nil
-}
-
-// WithConfig overrides default Storage config.
-func WithConfig(config Config) StorageOption {
-	return func(st *Storage) error {
-		st.config = config
-
-		return nil
-	}
-}
-
-func New(opts ...StorageOption) (*Storage, error) {
-	st := &Storage{
-		config: NewDefaultConfig(),
-	}
-	for optIdx, opt := range opts {
-		if err := opt(st); err != nil {
-			return nil, fmt.Errorf("applying option [%d]: %w", optIdx, err)
-		}
-	}
-
-	if err := st.config.Validate(); err != nil {
-		return nil, fmt.Errorf("config validation: %w", err)
-	}
-
-	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(st.config.DSN)))
-
-	maxOpenConnections := 4 * runtime.GOMAXPROCS(0)
-
-	db := bun.NewDB(sqlDB, pgdialect.New())
-	db.SetMaxOpenConns(maxOpenConnections)
-	db.SetMaxIdleConns(maxOpenConnections)
-	db.RegisterModel(
-		(*schema.URL)(nil),
-	)
-
-	if err := db.Ping(); err != nil {
-		return st, fmt.Errorf("ping for DSN (%s) failed: %w", st.config.DSN, err)
-	}
-
-	_, err := db.NewCreateTable().
-		Model(&schema.URL{}).
-		IfNotExists().
-		Exec(context.Background())
-	if err != nil {
-		return st, fmt.Errorf("create table failed: %w", err)
-	}
-
-	st.db = db
-
-	return st, nil
 }
