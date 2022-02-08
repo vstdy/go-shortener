@@ -92,7 +92,7 @@ func (st Storage) Close() error {
 	return st.db.Close()
 }
 
-func (st *Storage) GetPing() error {
+func (st *Storage) Ping() error {
 	if err := st.db.Ping(); err != nil {
 		return err
 	}

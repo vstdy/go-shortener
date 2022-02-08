@@ -77,24 +77,7 @@ func cookieAuth(secretKey string) func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			switch cookie, _ := r.Cookie(cookieName); {
-			case cookie != nil:
-				encryptedValue, err := base64.StdEncoding.DecodeString(cookie.Value)
-				if err != nil {
-					break
-				}
-				decryptedValue, err := aesGCM.Open(nil, nonce, encryptedValue, nil)
-				if err != nil {
-					break
-				}
-				userID, err := uuid.ParseBytes(decryptedValue)
-				if err != nil {
-					break
-				}
-
-				ctx = context.WithValue(ctx, userIDKey, userID)
-				next.ServeHTTP(w, r.WithContext(ctx))
-			default:
+			newCookie := func(w http.ResponseWriter, r *http.Request) {
 				userID := uuid.New()
 				encryptedValue := aesGCM.Seal(nil, nonce, []byte(userID.String()), nil)
 
@@ -108,6 +91,30 @@ func cookieAuth(secretKey string) func(next http.Handler) http.Handler {
 				ctx = context.WithValue(ctx, userIDKey, userID)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			}
+
+			cookie, err := r.Cookie(cookieName)
+			if err != nil {
+				newCookie(w, r)
+				return
+			}
+			encryptedValue, err := base64.StdEncoding.DecodeString(cookie.Value)
+			if err != nil {
+				newCookie(w, r)
+				return
+			}
+			decryptedValue, err := aesGCM.Open(nil, nonce, encryptedValue, nil)
+			if err != nil {
+				newCookie(w, r)
+				return
+			}
+			userID, err := uuid.ParseBytes(decryptedValue)
+			if err != nil {
+				newCookie(w, r)
+				return
+			}
+
+			ctx = context.WithValue(ctx, userIDKey, userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 
 		return http.HandlerFunc(fn)

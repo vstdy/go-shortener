@@ -12,9 +12,9 @@ import (
 type URLService interface {
 	io.Closer
 
-	AddURL(ctx context.Context, url *model.URL) (error, error)
-	AddBatchURLs(ctx context.Context, urls *[]model.URL) (error, error)
+	AddURL(ctx context.Context, url *model.URL) error
+	AddBatchURLs(ctx context.Context, urls *[]model.URL) error
 	GetURL(ctx context.Context, urlID int) (string, error)
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
-	GetPing() error
+	Ping() error
 }

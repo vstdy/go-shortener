@@ -24,11 +24,16 @@ func Router(svc shortener.URLService, cfg common.Config) chi.Router {
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.shortenURL)
-		r.Post("/api/shorten", h.shortenURL)
-		r.Post("/api/shorten/batch", h.shortenBatchURLs)
 		r.Get("/{id}", h.getShortenURL)
 		r.Get("/user/urls", h.getUserURLs)
-		r.Get("/ping", h.getPing)
+		r.Get("/ping", h.Ping)
+
+		r.Route("/api", func(r chi.Router) {
+			r.Use(middleware.AllowContentType("application/json"))
+
+			r.Post("/shorten", h.shortenURL)
+			r.Post("/shorten/batch", h.shortenBatchURLs)
+		})
 	})
 
 	return r

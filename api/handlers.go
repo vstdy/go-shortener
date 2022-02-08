@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -47,16 +48,16 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	default:
 		res, err = h.plainURLResponse(r.Context(), userID, body)
 	}
-	switch err {
-	case pkg.ErrUniqueViolation:
+	if err != nil {
+		if !errors.Is(err, pkg.ErrIntegrityViolation) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusConflict)
-	case nil:
+	} else {
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusCreated)
-	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	if _, err = w.Write(res); err != nil {
@@ -66,12 +67,6 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
-	contentType := r.Header.Get("Content-Type")
-	if contentType != "application/json" {
-		http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
-		return
-	}
-
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
 		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
@@ -85,17 +80,19 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	contentType := r.Header.Get("Content-Type")
+
 	res, err := h.urlsBatchResponse(r.Context(), userID, body)
-	switch err {
-	case pkg.ErrUniqueViolation:
+	if err != nil {
+		if !errors.Is(err, pkg.ErrIntegrityViolation) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusConflict)
-	case nil:
+	} else {
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusCreated)
-	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	if _, err = w.Write(res); err != nil {
@@ -155,8 +152,8 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) getPing(w http.ResponseWriter, r *http.Request) {
-	if err := h.service.GetPing(); err != nil {
+func (h Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	if err := h.service.Ping(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

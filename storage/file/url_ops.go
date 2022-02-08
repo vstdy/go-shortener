@@ -21,7 +21,7 @@ func (st *Storage) HasURL(ctx context.Context, urlID int) (bool, error) {
 }
 
 // AddURLS adds given objects to storage
-func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error, error) {
+func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error) {
 	st.Lock()
 	defer st.Unlock()
 
@@ -31,7 +31,7 @@ func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, 
 		dbObjs[idx].ID = st.id
 
 		if err := st.encoder.Encode(dbObjs[idx]); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		st.urls[dbObjs[idx].ID] = dbObjs[idx]
@@ -40,7 +40,7 @@ func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, 
 
 	objs := dbObjs.ToCanonical()
 
-	return objs, nil, nil
+	return objs, nil
 }
 
 // GetURL gets object with given id

@@ -30,6 +30,6 @@ func (st *Storage) Close() error {
 	return nil
 }
 
-func (st *Storage) GetPing() error {
+func (st *Storage) Ping() error {
 	return pkg.ErrNoDBConnection
 }

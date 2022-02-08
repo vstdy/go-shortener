@@ -82,6 +82,6 @@ func (st *Storage) Close() error {
 	return st.file.Close()
 }
 
-func (st *Storage) GetPing() error {
+func (st *Storage) Ping() error {
 	return pkg.ErrNoDBConnection
 }

@@ -3,11 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 
 	"github.com/google/uuid"
 
 	"github.com/vstdy0/go-project/api/model"
+	"github.com/vstdy0/go-project/pkg"
 )
 
 func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
@@ -18,9 +20,9 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 	}
 
 	obj := req.ToCanonical(userID)
-	pgErr, err := h.service.AddURL(ctx, &obj)
-	if err != nil {
-		return nil, err
+	svcErr := h.service.AddURL(ctx, &obj)
+	if svcErr != nil && !errors.Is(svcErr, pkg.ErrIntegrityViolation) {
+		return nil, svcErr
 	}
 
 	res, err := json.Marshal(model.URLResponse{Result: h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)})
@@ -28,7 +30,7 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 		return nil, err
 	}
 
-	return res, pgErr
+	return res, svcErr
 }
 
 func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
@@ -37,12 +39,12 @@ func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []
 	}
 
 	obj := req.ToCanonical(userID)
-	pgErr, err := h.service.AddURL(ctx, &obj)
-	if err != nil {
-		return nil, err
+	svcErr := h.service.AddURL(ctx, &obj)
+	if svcErr != nil && !errors.Is(svcErr, pkg.ErrIntegrityViolation) {
+		return nil, svcErr
 	}
 
-	return []byte(h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)), pgErr
+	return []byte(h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)), svcErr
 }
 
 func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
@@ -56,9 +58,9 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 		return nil, err
 	}
 
-	pgErr, err := h.service.AddBatchURLs(ctx, &objs)
-	if err != nil {
-		return nil, err
+	svcErr := h.service.AddBatchURLs(ctx, &objs)
+	if svcErr != nil && !errors.Is(svcErr, pkg.ErrIntegrityViolation) {
+		return nil, svcErr
 	}
 
 	batchRes := model.NewURLsBatchFromCanonical(objs, h.cfg.BaseURL)
@@ -68,5 +70,5 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 		return nil, err
 	}
 
-	return res, pgErr
+	return res, svcErr
 }

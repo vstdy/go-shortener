@@ -13,8 +13,8 @@ type URLStorage interface {
 	io.Closer
 
 	HasURL(ctx context.Context, urlID int) (bool, error)
-	AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error, error)
+	AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error)
 	GetURL(ctx context.Context, urlID int) (model.URL, error)
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
-	GetPing() error
+	Ping() error
 }

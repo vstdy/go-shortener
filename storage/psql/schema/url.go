@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
@@ -14,6 +16,9 @@ type (
 		CorrelationID string    `bun:"-"`
 		UserID        uuid.UUID `bun:"user_id,type:uuid,notnull"`
 		URL           string    `bun:"url,unique,notnull"`
+		CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
+		UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+		Updated       bool      `bun:"updated,scanonly"`
 	}
 
 	URLS []URL

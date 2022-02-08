@@ -7,8 +7,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgerrcode"
-	"github.com/uptrace/bun/driver/pgdriver"
 
 	"github.com/vstdy0/go-project/model"
 	"github.com/vstdy0/go-project/pkg"
@@ -26,38 +24,31 @@ func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 }
 
 // AddURLS adds given objects to storage
-func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error, error) {
-	var pgErr error
+func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error) {
 	dbObjs := schema.NewURLsFromCanonical(urls)
 
 	_, err := st.db.NewInsert().
 		Model(&dbObjs).
-		Returning("*").
+		On("CONFLICT (url) DO UPDATE").
+		Set("updated_at=NOW()").
+		Returning("*, created_at <> updated_at AS updated").
 		Exec(ctx)
 	if err != nil {
-		if err, ok := err.(pgdriver.Error); ok &&
-			err.Field('C') == pgerrcode.UniqueViolation {
-			_, err := st.db.NewInsert().
-				Model(&dbObjs).
-				On("CONFLICT (url) DO UPDATE").
-				Returning("*").
-				Exec(ctx)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			pgErr = pkg.ErrUniqueViolation
-		} else {
-			return nil, nil, err
-		}
+		return nil, err
 	}
 
 	objs, err := dbObjs.ToCanonical()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return objs, pgErr, nil
+	for _, obj := range dbObjs {
+		if obj.Updated {
+			return objs, pkg.ErrIntegrityViolation
+		}
+	}
+
+	return objs, nil
 }
 
 // GetURL gets object with given id
