@@ -2,33 +2,38 @@ package main
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/vstdy0/go-project/api"
-	"github.com/vstdy0/go-project/config"
-	"github.com/vstdy0/go-project/service/shortener/v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/vstdy0/go-project/api"
+	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
 )
 
 func TestShortener(t *testing.T) {
-	cfg, err := config.LoadEnvs()
-	require.NoError(t, err)
+	cfg := common.Config{
+		RequestTimeout: 5,
+		ServerAddress:  "127.0.0.1:8080",
+		BaseURL:        "http://127.0.0.1:8080",
+		SecretKey:      "test_secret",
+	}
 
-	cfg.FileStoragePath = "storage.txt"
-	defer os.Remove(cfg.FileStoragePath)
+	cfg.FileStorage.FileStoragePath = "storage.txt"
+	defer os.Remove(cfg.FileStorage.FileStoragePath)
 
-	svc, err := shortener.NewService(shortener.WithInMemoryStorage())
+	svc, err := cfg.BuildService("memory")
 	require.NoError(t, err)
 	r := api.Router(svc, cfg)
 	inMemoryTS := httptest.NewServer(r)
 	defer inMemoryTS.Close()
 
-	svc, err = shortener.NewService(shortener.WithInFileStorage(cfg))
+	svc, err = cfg.BuildService("file")
 	require.NoError(t, err)
 	r = api.Router(svc, cfg)
 	inFileTS := httptest.NewServer(r)
