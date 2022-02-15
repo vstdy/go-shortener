@@ -17,25 +17,25 @@ import (
 )
 
 func TestShortener(t *testing.T) {
-	cfg := common.Config{
-		RequestTimeout: 5,
-		ServerAddress:  "127.0.0.1:8080",
-		BaseURL:        "http://127.0.0.1:8080",
-		SecretKey:      "test_secret",
+	config := common.Config{
+		Timeout:       5,
+		ServerAddress: "127.0.0.1:8080",
+		BaseURL:       "http://127.0.0.1:8080",
+		SecretKey:     "test_secret",
 	}
 
-	cfg.FileStorage.FileStoragePath = "storage.txt"
-	defer os.Remove(cfg.FileStorage.FileStoragePath)
+	config.FileStorage.FileStoragePath = "storage.txt"
+	defer os.Remove(config.FileStorage.FileStoragePath)
 
-	svc, err := cfg.BuildService("memory")
+	svc, err := config.BuildService("memory")
 	require.NoError(t, err)
-	r := api.Router(svc, cfg)
+	r := api.Router(svc, config)
 	inMemoryTS := httptest.NewServer(r)
 	defer inMemoryTS.Close()
 
-	svc, err = cfg.BuildService("file")
+	svc, err = config.BuildService("file")
 	require.NoError(t, err)
-	r = api.Router(svc, cfg)
+	r = api.Router(svc, config)
 	inFileTS := httptest.NewServer(r)
 	defer inFileTS.Close()
 
@@ -59,7 +59,7 @@ func TestShortener(t *testing.T) {
 			contentType: "text/plain; charset=UTF-8",
 			want: want{
 				code:        http.StatusCreated,
-				response:    cfg.BaseURL + "/1",
+				response:    config.BaseURL + "/1",
 				contentType: "text/plain; charset=UTF-8",
 			},
 		},
@@ -70,7 +70,7 @@ func TestShortener(t *testing.T) {
 			contentType: "application/json",
 			want: want{
 				code:        http.StatusCreated,
-				response:    fmt.Sprintf(`{"result":"%s/%d"}`, cfg.BaseURL, 2),
+				response:    fmt.Sprintf(`{"result":"%s/%d"}`, config.BaseURL, 2),
 				contentType: "application/json",
 			},
 		},

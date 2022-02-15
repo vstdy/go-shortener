@@ -13,12 +13,12 @@ import (
 
 // Config combines sub-configs for all services, storages and providers.
 type Config struct {
-	RequestTimeout time.Duration
-	ServerAddress  string      `mapstructure:"server_address"`
-	BaseURL        string      `mapstructure:"base_url"`
-	SecretKey      string      `mapstructure:"secret_key"`
-	FileStorage    file.Config `mapstructure:"file_storage,squash"`
-	PSQLStorage    psql.Config `mapstructure:"psql_storage,squash"`
+	Timeout       time.Duration
+	ServerAddress string      `mapstructure:"server_address"`
+	BaseURL       string      `mapstructure:"base_url"`
+	SecretKey     string      `mapstructure:"secret_key"`
+	FileStorage   file.Config `mapstructure:"file_storage,squash"`
+	PSQLStorage   psql.Config `mapstructure:"psql_storage,squash"`
 }
 
 const (

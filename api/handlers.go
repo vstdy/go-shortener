@@ -19,11 +19,11 @@ import (
 
 type Handler struct {
 	service shortener.URLService
-	cfg     common.Config
+	config  common.Config
 }
 
-func NewHandler(service shortener.URLService, cfg common.Config) Handler {
-	return Handler{service: service, cfg: cfg}
+func NewHandler(service shortener.URLService, config common.Config) Handler {
+	return Handler{service: service, config: config}
 }
 
 func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
@@ -53,13 +53,18 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusConflict)
-	} else {
-		w.Header().Set("Content-Type", contentType)
-		w.WriteHeader(http.StatusCreated)
+		_, err = w.Write(res)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
 	}
 
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusCreated)
 	if _, err = w.Write(res); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,20 +93,24 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(http.StatusConflict)
-	} else {
-		w.Header().Set("Content-Type", contentType)
-		w.WriteHeader(http.StatusCreated)
+		if _, err = w.Write(res); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusCreated)
 	if _, err = w.Write(res); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-func (h Handler) getShortenURL(w http.ResponseWriter, r *http.Request) {
+func (h Handler) getShortenedURL(w http.ResponseWriter, r *http.Request) {
 	urlID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -111,6 +120,11 @@ func (h Handler) getShortenURL(w http.ResponseWriter, r *http.Request) {
 	url, err := h.service.GetURL(r.Context(), urlID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if url == "" {
+		w.WriteHeader(http.StatusGone)
 		return
 	}
 
@@ -131,25 +145,54 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userURLs := model.UserURLsFromCanonical(urls, h.cfg.BaseURL)
+	userURLs := model.UserURLsFromCanonical(urls, h.config.BaseURL)
 
-	var res []byte
-	if userURLs != nil {
-		marshal, err := json.Marshal(userURLs)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		res = marshal
-		w.Header().Set("Content-Type", "application/json")
-	} else {
+	if userURLs == nil {
 		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 
+	res, err := json.Marshal(userURLs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(res); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
+		return
+	}
+
+	var ids []string
+	err := json.NewDecoder(r.Body).Decode(&ids)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	objs, err := model.URLsToDeleteToCanonical(ids, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteUserURLs(objs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (h Handler) Ping(w http.ResponseWriter, r *http.Request) {

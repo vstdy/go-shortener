@@ -9,8 +9,10 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/migrate"
 
 	inter "github.com/vstdy0/go-project/storage"
+	"github.com/vstdy0/go-project/storage/psql/migrations"
 	"github.com/vstdy0/go-project/storage/psql/schema"
 )
 
@@ -72,14 +74,6 @@ func New(opts ...StorageOption) (*Storage, error) {
 		return nil, fmt.Errorf("ping for DSN (%s) failed: %w", st.config.DSN, err)
 	}
 
-	_, err := st.db.NewCreateTable().
-		Model(&schema.URL{}).
-		IfNotExists().
-		Exec(context.Background())
-	if err != nil {
-		return st, fmt.Errorf("create table failed: %w", err)
-	}
-
 	return st, nil
 }
 
@@ -92,6 +86,32 @@ func (st Storage) Close() error {
 	return st.db.Close()
 }
 
+// Migrate performs DB migrations.
+func (st Storage) Migrate(ctx context.Context) error {
+	logger := st.Logger(withOperation("migration"))
+
+	ms, err := migrations.GetMigrations()
+	if err != nil {
+		return err
+	}
+
+	migration := migrate.NewMigrator(st.db, ms)
+
+	if err = migration.Init(ctx); err != nil {
+		return fmt.Errorf("initialising migration: %w", err)
+	}
+
+	res, err := migration.Migrate(ctx)
+	if err != nil {
+		return fmt.Errorf("performing migration: %w", err)
+	}
+
+	logger.Info().Msgf("Migration applied: %s", res.Migrations.LastGroup().String())
+
+	return nil
+}
+
+// Ping verifies a connection to the database is still alive.
 func (st *Storage) Ping() error {
 	if err := st.db.Ping(); err != nil {
 		return err

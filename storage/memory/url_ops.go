@@ -14,17 +14,18 @@ import (
 func (st *Storage) HasURL(ctx context.Context, urlID int) (bool, error) {
 	st.RLock()
 	defer st.RUnlock()
+
 	_, ok := st.urls[urlID]
 
 	return ok, nil
 }
 
 // AddURLS adds given objects to storage
-func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error) {
+func (st *Storage) AddURLS(ctx context.Context, objs []model.URL) ([]model.URL, error) {
 	st.Lock()
 	defer st.Unlock()
 
-	dbObjs := schema.NewURLsFromCanonical(urls)
+	dbObjs := schema.NewURLsFromCanonical(objs)
 
 	for idx := range dbObjs {
 		dbObjs[idx].ID = st.id
@@ -33,15 +34,16 @@ func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, 
 		st.id++
 	}
 
-	objs := dbObjs.ToCanonical()
+	addedObjs := dbObjs.ToCanonical()
 
-	return objs, nil
+	return addedObjs, nil
 }
 
 // GetURL gets object with given id
 func (st *Storage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 	st.RLock()
 	defer st.RUnlock()
+
 	url, ok := st.urls[urlID]
 	if !ok {
 		return model.URL{}, fmt.Errorf("url does not exist")
@@ -52,6 +54,9 @@ func (st *Storage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 
 // GetUserURLs gets current user objects
 func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
+	st.RLock()
+	defer st.RUnlock()
+
 	var urls schema.URLS
 	for _, v := range st.urls {
 		if v.UserID == userID {
@@ -60,4 +65,10 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	}
 
 	return urls.ToCanonical(), nil
+}
+
+// RemoveUserURLs removes current user objects with given ids
+func (st *Storage) RemoveUserURLs(objs []model.URL) error {
+
+	return nil
 }

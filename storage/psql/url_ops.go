@@ -13,6 +13,8 @@ import (
 	"github.com/vstdy0/go-project/storage/psql/schema"
 )
 
+const tableName = "url"
+
 // HasURL checks existence of the object with given id
 func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 	exists, err := st.db.NewSelect().
@@ -24,12 +26,14 @@ func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 }
 
 // AddURLS adds given objects to storage
-func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, error) {
-	dbObjs := schema.NewURLsFromCanonical(urls)
+func (st *Storage) AddURLS(ctx context.Context, objs []model.URL) ([]model.URL, error) {
+	logger := st.Logger(withTable(tableName), withOperation("insert"))
+
+	dbObjs := schema.NewURLsFromCanonical(objs)
 
 	_, err := st.db.NewInsert().
 		Model(&dbObjs).
-		On("CONFLICT (url) DO UPDATE").
+		On("CONFLICT (url) WHERE deleted_at IS NULL DO UPDATE").
 		Set("updated_at=NOW()").
 		Returning("*, created_at <> updated_at AS updated").
 		Exec(ctx)
@@ -37,18 +41,20 @@ func (st *Storage) AddURLS(ctx context.Context, urls []model.URL) ([]model.URL, 
 		return nil, err
 	}
 
-	objs, err := dbObjs.ToCanonical()
+	addedObjs, err := dbObjs.ToCanonical()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, obj := range dbObjs {
 		if obj.Updated {
-			return objs, pkg.ErrIntegrityViolation
+			return addedObjs, pkg.ErrIntegrityViolation
 		}
 	}
 
-	return objs, nil
+	logger.Info().Msgf("Objects added by %s", addedObjs[0].UserID)
+
+	return addedObjs, nil
 }
 
 // GetURL gets object with given id
@@ -93,4 +99,28 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	}
 
 	return objs, nil
+}
+
+// RemoveUserURLs removes current user objects with given ids
+func (st *Storage) RemoveUserURLs(objs []model.URL) error {
+	logger := st.Logger(withTable(tableName), withOperation("delete"))
+
+	dbObjs := schema.NewURLsFromCanonical(objs)
+
+	res, err := st.db.NewDelete().
+		Model(&dbObjs).
+		WherePK("id", "user_id").
+		Exec(context.Background())
+	if err != nil {
+		return err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger.Info().Msgf("%d objects deleted", affected)
+
+	return nil
 }

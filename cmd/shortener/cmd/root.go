@@ -19,7 +19,7 @@ import (
 
 const (
 	flagLogLevel        = "log-level"
-	flagRequestTimeout  = "timeout"
+	flagTimeout         = "timeout"
 	flagServerAddress   = "server_address"
 	flagBaseURL         = "base_url"
 	flagFileStoragePath = "file_storage_path"
@@ -35,6 +35,8 @@ func Execute() error {
 
 // newRootCmd creates a new root cmd.
 func newRootCmd() *cobra.Command {
+	mig := newMigrateCmd()
+
 	cmd := &cobra.Command{
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := setupLogger(cmd); err != nil {
@@ -49,14 +51,20 @@ func newRootCmd() *cobra.Command {
 		},
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := common.GetConfigFromCmdCtx(cmd)
+			config := common.GetConfigFromCmdCtx(cmd)
 
 			opStorage, err := cmd.Flags().GetString(flagStorage)
 			if err != nil {
 				return fmt.Errorf("app initialization: reading flag %s: %w", flagStorage, err)
 			}
 
-			svc, err := cfg.BuildService(opStorage)
+			if opStorage == "psql" || opStorage == "" {
+				if err = mig.RunE(cmd, args); err != nil {
+					return fmt.Errorf("app initialization: migration failed: %w", err)
+				}
+			}
+
+			svc, err := config.BuildService(opStorage)
 			if err != nil {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
@@ -66,7 +74,7 @@ func newRootCmd() *cobra.Command {
 				}
 			}()
 
-			srv := api.NewServer(svc, cfg)
+			srv := api.NewServer(svc, config)
 
 			idleConnsClosed := make(chan struct{})
 
@@ -97,12 +105,14 @@ func newRootCmd() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().String(flagLogLevel, "info", "Logger level [debug,info,warn,error,fatal]")
-	cmd.PersistentFlags().Duration(flagRequestTimeout, 5*time.Second, "Request timeout")
+	cmd.PersistentFlags().Duration(flagTimeout, 5*time.Second, "Request timeout")
 	cmd.PersistentFlags().StringP(flagServerAddress, "a", "127.0.0.1:8080", "Server address")
 	cmd.PersistentFlags().StringP(flagBaseURL, "b", "http://127.0.0.1:8080", "Base URL")
 	cmd.PersistentFlags().StringP(flagFileStoragePath, "f", "./storage/file/storage.txt", "File storage path")
 	cmd.PersistentFlags().StringP(flagDatabaseDSN, "d", "", "Database source name")
 	cmd.PersistentFlags().StringP(flagStorage, "s", "", "Storage type [memory, file, psql]")
+
+	cmd.AddCommand(mig)
 
 	return cmd
 }
@@ -144,7 +154,7 @@ func setupConfig(cmd *cobra.Command) error {
 	if err := viper.Unmarshal(&config); err != nil {
 		return fmt.Errorf("config unmarshal: %w", err)
 	}
-	config.RequestTimeout = viper.GetDuration(flagRequestTimeout)
+	config.Timeout = viper.GetDuration(flagTimeout)
 	common.SetConfigToCmdCtx(cmd, config)
 
 	return nil
