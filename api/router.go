@@ -8,7 +8,8 @@ import (
 	"github.com/vstdy0/go-project/service/shortener"
 )
 
-func Router(svc shortener.URLService, config common.Config) chi.Router {
+// NewRouter returns router.
+func NewRouter(svc shortener.URLService, config common.Config) chi.Router {
 	h := NewHandler(svc, config)
 	r := chi.NewRouter()
 
@@ -25,7 +26,7 @@ func Router(svc shortener.URLService, config common.Config) chi.Router {
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.shortenURL)
 		r.Get("/{id}", h.getShortenedURL)
-		r.Get("/ping", h.Ping)
+		r.Get("/ping", h.ping)
 
 		r.Route("/api", func(r chi.Router) {
 			r.Use(middleware.AllowContentType("application/json"))

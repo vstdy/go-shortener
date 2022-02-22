@@ -1,9 +1,11 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/vstdy0/go-project/pkg"
 	"github.com/vstdy0/go-project/service/shortener/v1"
 	"github.com/vstdy0/go-project/storage"
 	"github.com/vstdy0/go-project/storage/file"
@@ -14,20 +16,37 @@ import (
 // Config combines sub-configs for all services, storages and providers.
 type Config struct {
 	Timeout       time.Duration
-	ServerAddress string      `mapstructure:"server_address"`
-	BaseURL       string      `mapstructure:"base_url"`
-	SecretKey     string      `mapstructure:"secret_key"`
-	FileStorage   file.Config `mapstructure:"file_storage,squash"`
-	PSQLStorage   psql.Config `mapstructure:"psql_storage,squash"`
+	ServerAddress string           `mapstructure:"server_address"`
+	BaseURL       string           `mapstructure:"base_url"`
+	SecretKey     string           `mapstructure:"secret_key"`
+	StorageType   string           `mapstructure:"storage_type"`
+	URLService    shortener.Config `mapstructure:"url_service,squash"`
+	FileStorage   file.Config      `mapstructure:"file_storage,squash"`
+	PSQLStorage   psql.Config      `mapstructure:"psql_storage,squash"`
 }
 
 const (
 	memoryStorage = "memory"
 	fileStorage   = "file"
+	psqlStorage   = "psql"
 )
 
+// BuildDefaultConfig builds a Config with default values.
+func BuildDefaultConfig() Config {
+	return Config{
+		Timeout:       5 * time.Second,
+		ServerAddress: "0.0.0.0:8080",
+		BaseURL:       "http://127.0.0.1:8080",
+		SecretKey:     "secret_key",
+		StorageType:   psqlStorage,
+		URLService:    shortener.NewDefaultConfig(),
+		FileStorage:   file.NewDefaultConfig(),
+		PSQLStorage:   psql.NewDefaultConfig(),
+	}
+}
+
 // BuildMemoryStorage builds memory.Storage dependency.
-func (c Config) BuildMemoryStorage() (*memory.Storage, error) {
+func (config Config) BuildMemoryStorage() (*memory.Storage, error) {
 	st, err := memory.New()
 	if err != nil {
 		return nil, fmt.Errorf("building memory storage: %w", err)
@@ -37,9 +56,9 @@ func (c Config) BuildMemoryStorage() (*memory.Storage, error) {
 }
 
 // BuildFileStorage builds file.Storage dependency.
-func (c Config) BuildFileStorage() (*file.Storage, error) {
+func (config Config) BuildFileStorage() (*file.Storage, error) {
 	st, err := file.New(
-		file.WithConfig(c.FileStorage),
+		file.WithConfig(config.FileStorage),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("building file storage: %w", err)
@@ -49,35 +68,47 @@ func (c Config) BuildFileStorage() (*file.Storage, error) {
 }
 
 // BuildPsqlStorage builds psql.Storage dependency.
-func (c Config) BuildPsqlStorage() (*psql.Storage, error) {
+func (config Config) BuildPsqlStorage() (*psql.Storage, error) {
 	st, err := psql.New(
-		psql.WithConfig(c.PSQLStorage),
+		psql.WithConfig(config.PSQLStorage),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("building psql storage: %w", err)
+	}
+
+	ctx, ctxCancel := context.WithTimeout(context.Background(), config.Timeout)
+	defer ctxCancel()
+
+	if err = st.Migrate(ctx); err != nil {
+		return nil, err
 	}
 
 	return st, nil
 }
 
 // BuildService builds shortener.Service dependency.
-func (c Config) BuildService(storageType string) (*shortener.Service, error) {
+func (config Config) BuildService(storageType string) (*shortener.Service, error) {
 	var st storage.URLStorage
 	var err error
 
 	switch storageType {
 	case memoryStorage:
-		st, err = c.BuildMemoryStorage()
+		st, err = config.BuildMemoryStorage()
 	case fileStorage:
-		st, err = c.BuildFileStorage()
+		st, err = config.BuildFileStorage()
+	case psqlStorage:
+		st, err = config.BuildPsqlStorage()
 	default:
-		st, err = c.BuildPsqlStorage()
+		err = pkg.ErrUnsupportedStorageType
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	svc, err := shortener.New(shortener.WithStorage(st))
+	svc, err := shortener.New(
+		shortener.WithConfig(config.URLService),
+		shortener.WithStorage(st),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("building service: %w", err)
 	}

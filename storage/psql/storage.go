@@ -26,11 +26,13 @@ const (
 var _ inter.URLStorage = (*Storage)(nil)
 
 type (
+	// Storage keeps psql storage dependencies.
 	Storage struct {
 		config Config
 		db     *bun.DB
 	}
 
+	// StorageOption defines functional argument for Storage constructor.
 	StorageOption func(st *Storage) error
 )
 
@@ -43,7 +45,7 @@ func WithConfig(config Config) StorageOption {
 	}
 }
 
-// New creates a new psql storage with custom options.
+// New creates a new psql Storage with custom options.
 func New(opts ...StorageOption) (*Storage, error) {
 	st := &Storage{
 		config: NewDefaultConfig(),

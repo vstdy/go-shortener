@@ -15,15 +15,18 @@ import (
 var _ inter.URLStorage = (*Storage)(nil)
 
 type (
+	// Storage keeps file storage dependencies.
 	Storage struct {
+		sync.RWMutex
+
 		config  Config
 		file    *os.File
 		encoder *json.Encoder
 		id      int
 		urls    map[int]schema.URL
-		sync.RWMutex
 	}
 
+	// StorageOption defines functional argument for Storage constructor.
 	StorageOption func(st *Storage) error
 )
 
@@ -36,7 +39,7 @@ func WithConfig(config Config) StorageOption {
 	}
 }
 
-// New creates a new file storage with custom options.
+// New creates a new file Storage with custom options.
 func New(opts ...StorageOption) (*Storage, error) {
 	st := &Storage{
 		config: NewDefaultConfig(),
@@ -82,6 +85,7 @@ func (st *Storage) Close() error {
 	return st.file.Close()
 }
 
+// Ping implements the storage ping interface.
 func (st *Storage) Ping() error {
 	return pkg.ErrNoDBConnection
 }

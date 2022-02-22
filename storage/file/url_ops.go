@@ -10,7 +10,7 @@ import (
 	"github.com/vstdy0/go-project/storage/file/schema"
 )
 
-// HasURL checks existence of the object with given id
+// HasURL checks existence of the url object with given id
 func (st *Storage) HasURL(ctx context.Context, urlID int) (bool, error) {
 	st.RLock()
 	defer st.RUnlock()
@@ -20,8 +20,8 @@ func (st *Storage) HasURL(ctx context.Context, urlID int) (bool, error) {
 	return ok, nil
 }
 
-// AddURLS adds given objects to storage
-func (st *Storage) AddURLS(ctx context.Context, objs []model.URL) ([]model.URL, error) {
+// AddURLs adds given url objects to storage
+func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, error) {
 	st.Lock()
 	defer st.Unlock()
 
@@ -43,7 +43,7 @@ func (st *Storage) AddURLS(ctx context.Context, objs []model.URL) ([]model.URL, 
 	return addedObjs, nil
 }
 
-// GetURL gets object with given id
+// GetURL gets url object with given id
 func (st *Storage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 	st.RLock()
 	defer st.RUnlock()
@@ -56,7 +56,7 @@ func (st *Storage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 	return url.ToCanonical(), nil
 }
 
-// GetUserURLs gets current user objects
+// GetUserURLs gets current user url objects
 func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	st.RLock()
 	defer st.RUnlock()
@@ -71,8 +71,8 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	return urls.ToCanonical(), nil
 }
 
-// RemoveUserURLs removes current user objects with given ids
-func (st *Storage) RemoveUserURLs(objs []model.URL) error {
+// RemoveUserURLs removes current user url objects with given ids
+func (st *Storage) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
 
 	return nil
 }

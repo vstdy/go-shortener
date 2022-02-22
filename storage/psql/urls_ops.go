@@ -15,7 +15,7 @@ import (
 
 const tableName = "url"
 
-// HasURL checks existence of the object with given id
+// HasURL checks existence of the url object with given id
 func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 	exists, err := st.db.NewSelect().
 		Model(&schema.URL{}).
@@ -25,8 +25,8 @@ func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 	return exists, err
 }
 
-// AddURLS adds given objects to storage
-func (st *Storage) AddURLS(ctx context.Context, objs []model.URL) ([]model.URL, error) {
+// AddURLs adds given url objects to storage
+func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, error) {
 	logger := st.Logger(withTable(tableName), withOperation("insert"))
 
 	dbObjs := schema.NewURLsFromCanonical(objs)
@@ -46,25 +46,24 @@ func (st *Storage) AddURLS(ctx context.Context, objs []model.URL) ([]model.URL, 
 		return nil, err
 	}
 
+	logger.Info().Msgf("Objects added %v", addedObjs)
+
 	for _, obj := range dbObjs {
 		if obj.Updated {
 			return addedObjs, pkg.ErrIntegrityViolation
 		}
 	}
 
-	logger.Info().Msgf("Objects added by %s", addedObjs[0].UserID)
-
 	return addedObjs, nil
 }
 
-// GetURL gets object with given id
+// GetURL gets url object with given id
 func (st *Storage) GetURL(ctx context.Context, id int) (model.URL, error) {
-	dbObj := &schema.URL{}
+	dbObj := schema.URL{}
 
 	err := st.db.NewSelect().
-		Model(dbObj).
+		Model(&dbObj).
 		Where("id = ?", id).
-		Limit(1).
 		Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -78,7 +77,7 @@ func (st *Storage) GetURL(ctx context.Context, id int) (model.URL, error) {
 	return obj, nil
 }
 
-// GetUserURLs gets current user objects
+// GetUserURLs gets current user url objects
 func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	var dbObjs schema.URLS
 
@@ -87,10 +86,10 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 		Where("user_id = ?", userID).
 		Scan(ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, err
+	}
+	if dbObjs == nil {
+		return nil, nil
 	}
 
 	objs, err := dbObjs.ToCanonical()
@@ -101,8 +100,8 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	return objs, nil
 }
 
-// RemoveUserURLs removes current user objects with given ids
-func (st *Storage) RemoveUserURLs(objs []model.URL) error {
+// RemoveUserURLs removes current user url objects with given ids
+func (st *Storage) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
 	logger := st.Logger(withTable(tableName), withOperation("delete"))
 
 	dbObjs := schema.NewURLsFromCanonical(objs)
@@ -110,7 +109,7 @@ func (st *Storage) RemoveUserURLs(objs []model.URL) error {
 	res, err := st.db.NewDelete().
 		Model(&dbObjs).
 		WherePK("id", "user_id").
-		Exec(context.Background())
+		Exec(ctx)
 	if err != nil {
 		return err
 	}

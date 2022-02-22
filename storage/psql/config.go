@@ -3,7 +3,7 @@ package psql
 import "fmt"
 
 const (
-	defaultConfigEndpoint = "postgres://username:password@localhost:5432/database_name"
+	defaultConfigEndpoint = "postgres://user:password@localhost:5432/shortener?sslmode=disable"
 )
 
 // Config keeps Storage configuration.
@@ -12,8 +12,8 @@ type Config struct {
 }
 
 // Validate performs a basic validation.
-func (c Config) Validate() error {
-	if c.DSN == "" {
+func (config Config) Validate() error {
+	if config.DSN == "" {
 		return fmt.Errorf("%s field: empty", "DSN")
 	}
 

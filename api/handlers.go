@@ -17,15 +17,18 @@ import (
 	"github.com/vstdy0/go-project/service/shortener"
 )
 
+// Handler keeps handler dependencies.
 type Handler struct {
 	service shortener.URLService
 	config  common.Config
 }
 
+// NewHandler returns a new Handler instance.
 func NewHandler(service shortener.URLService, config common.Config) Handler {
 	return Handler{service: service, config: config}
 }
 
+// shortenURL creates shortcut for given url.
 func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
@@ -71,6 +74,7 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// shortenBatchURLs creates shortcuts for given urls batch.
 func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
@@ -110,6 +114,7 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getShortenedURL returns origin url from shortcut.
 func (h Handler) getShortenedURL(w http.ResponseWriter, r *http.Request) {
 	urlID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -132,6 +137,7 @@ func (h Handler) getShortenedURL(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+// getUserURLs returns urls created by current user.
 func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
@@ -165,6 +171,7 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// deleteUserURLs removes urls created by current user.
 func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 	if !ok {
@@ -186,7 +193,7 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.DeleteUserURLs(objs)
+	err = h.service.RemoveUserURLs(objs)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -195,7 +202,8 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func (h Handler) Ping(w http.ResponseWriter, r *http.Request) {
+// ping checks connection to database.
+func (h Handler) ping(w http.ResponseWriter, r *http.Request) {
 	if err := h.service.Ping(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

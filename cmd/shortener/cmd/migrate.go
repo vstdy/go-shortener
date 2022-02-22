@@ -22,7 +22,7 @@ func newMigrateCmd() *cobra.Command {
 				return err
 			}
 			defer func() {
-				if err := st.Close(); err != nil {
+				if err = st.Close(); err != nil {
 					log.Error().Err(err).Msg("Shutting down the app")
 				}
 			}()
@@ -30,7 +30,7 @@ func newMigrateCmd() *cobra.Command {
 			ctx, ctxCancel := context.WithTimeout(context.Background(), config.Timeout)
 			defer ctxCancel()
 
-			if err := st.Migrate(ctx); err != nil {
+			if err = st.Migrate(ctx); err != nil {
 				return err
 			}
 

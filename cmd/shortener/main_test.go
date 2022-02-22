@@ -14,6 +14,7 @@ import (
 
 	"github.com/vstdy0/go-project/api"
 	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
+	"github.com/vstdy0/go-project/service/shortener/v1"
 )
 
 func TestShortener(t *testing.T) {
@@ -22,6 +23,7 @@ func TestShortener(t *testing.T) {
 		ServerAddress: "127.0.0.1:8080",
 		BaseURL:       "http://127.0.0.1:8080",
 		SecretKey:     "test_secret",
+		URLService:    shortener.NewDefaultConfig(),
 	}
 
 	config.FileStorage.FileStoragePath = "storage.txt"
@@ -29,13 +31,13 @@ func TestShortener(t *testing.T) {
 
 	svc, err := config.BuildService("memory")
 	require.NoError(t, err)
-	r := api.Router(svc, config)
+	r := api.NewRouter(svc, config)
 	inMemoryTS := httptest.NewServer(r)
 	defer inMemoryTS.Close()
 
 	svc, err = config.BuildService("file")
 	require.NoError(t, err)
-	r = api.Router(svc, config)
+	r = api.NewRouter(svc, config)
 	inFileTS := httptest.NewServer(r)
 	defer inFileTS.Close()
 

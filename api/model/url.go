@@ -54,7 +54,7 @@ type AddURLsBatchResponse struct {
 	ShortURL      string `json:"short_url"`
 }
 
-// NewURLsBatchFromCanonical creates a new URLS DB object from canonical model.
+// NewURLsBatchFromCanonical creates array of AddURLsBatchResponse objects from array of canonical models.
 func NewURLsBatchFromCanonical(objs []model.URL, baseURL string) []AddURLsBatchResponse {
 	var urls []AddURLsBatchResponse
 	for _, url := range objs {
@@ -65,4 +65,34 @@ func NewURLsBatchFromCanonical(objs []model.URL, baseURL string) []AddURLsBatchR
 	}
 
 	return urls
+}
+
+type UserURL struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
+func UserURLsFromCanonical(urls []model.URL, baseURL string) []UserURL {
+	var userURLs []UserURL
+	for _, v := range urls {
+		userURLs = append(userURLs, UserURL{ShortURL: baseURL + "/" + strconv.Itoa(v.ID), OriginalURL: v.URL})
+	}
+
+	return userURLs
+}
+
+func URLsToDeleteToCanonical(ids []string, userID uuid.UUID) ([]model.URL, error) {
+	var objs []model.URL
+	for _, idRaw := range ids {
+		id, err := strconv.Atoi(idRaw)
+		if err != nil {
+			return nil, err
+		}
+		objs = append(objs, model.URL{
+			ID:     id,
+			UserID: userID,
+		})
+	}
+
+	return objs, nil
 }

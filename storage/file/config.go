@@ -1,19 +1,23 @@
 package file
 
-import "fmt"
-
-const (
-	defaultConfigEndpoint = "./storage/file/storage.txt"
+import (
+	"fmt"
+	"path/filepath"
+	"runtime"
 )
 
-// Config keeps FileStorage configuration.
+const (
+	defaultFileStorageName = "storage_file.txt"
+)
+
+// Config keeps Storage configuration.
 type Config struct {
 	FileStoragePath string `mapstructure:"file_storage_path"`
 }
 
 // Validate performs a basic validation.
-func (c Config) Validate() error {
-	if c.FileStoragePath == "" {
+func (config Config) Validate() error {
+	if config.FileStoragePath == "" {
 		return fmt.Errorf("%s field: empty", "FileStoragePath")
 	}
 
@@ -23,6 +27,16 @@ func (c Config) Validate() error {
 // NewDefaultConfig builds a Config with default values.
 func NewDefaultConfig() Config {
 	return Config{
-		FileStoragePath: defaultConfigEndpoint,
+		FileStoragePath: defaultFileStoragePath(),
 	}
+}
+
+// defaultFileStoragePath returns full path to storage file.
+func defaultFileStoragePath() string {
+	_, filePath, _, ok := runtime.Caller(1)
+	if !ok {
+		return ""
+	}
+
+	return filepath.Dir(filePath) + "/" + defaultFileStorageName
 }
