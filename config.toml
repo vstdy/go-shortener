@@ -1,0 +1,34 @@
+# App config example.
+
+# PostgreSQL storage configuration
+# Connection URL
+database_dsn = "postgres://user:password@localhost:5432/shortener?sslmode=disable"
+
+# Log level
+log-level = "info"
+
+# Request timeout
+timeout = "5s"
+
+# Server address
+server_address = "0.0.0.0:8080"
+
+# Base URL
+base_url = "http://127.0.0.1:8080"
+
+# File storage path
+file_storage_path = "./storage/file/storage_file.txt"
+
+# Sectet key
+secret_key = "secret_key"
+
+# Storage type
+storage_type = "psql"
+
+# Delition worker configs
+# Request timeout
+del_req_timeout = "5s"
+# Buffer cleanse timeout
+del_buf_wipe_timeout = "10s"
+# Buffer capacity
+del_buf_cap = 10

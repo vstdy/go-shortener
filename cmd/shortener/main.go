@@ -1,13 +1,16 @@
 package main
 
 import (
-	"log"
+	"os"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/vstdy0/go-project/cmd/shortener/cmd"
 )
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Application crashed")
+		os.Exit(1)
 	}
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
-	var req model.URLRequest
+	var req model.AddURLRequest
 
 	if err := json.Unmarshal(body, &req); err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 		return nil, svcErr
 	}
 
-	res, err := json.Marshal(model.URLResponse{Result: h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)})
+	res, err := json.Marshal(model.AddURLResponse{Result: h.config.BaseURL + "/" + strconv.Itoa(obj.ID)})
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 }
 
 func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
-	req := model.URLRequest{
+	req := model.AddURLRequest{
 		URL: string(body),
 	}
 
@@ -44,11 +44,11 @@ func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []
 		return nil, svcErr
 	}
 
-	return []byte(h.cfg.BaseURL + "/" + strconv.Itoa(obj.ID)), svcErr
+	return []byte(h.config.BaseURL + "/" + strconv.Itoa(obj.ID)), svcErr
 }
 
 func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
-	var batchReq model.URLsBatchRequest
+	var batchReq model.AddURLsBatchRequest
 	if err := json.Unmarshal(body, &batchReq); err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 		return nil, svcErr
 	}
 
-	batchRes := model.NewURLsBatchFromCanonical(objs, h.cfg.BaseURL)
+	batchRes := model.NewURLsBatchFromCanonical(objs, h.config.BaseURL)
 
 	res, err := json.Marshal(batchRes)
 	if err != nil {

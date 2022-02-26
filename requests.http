@@ -1,0 +1,54 @@
+### 1. Create shortcut for url from text/plain body
+POST http://127.0.0.1:8080
+Content-Type: text/plain; charset=UTF-8
+
+https://extremely-lengthy-url-1/
+
+### 2. Create shortcut for url from application/json body
+POST http://127.0.0.1:8080/api/shorten
+Content-Type: application/json
+
+{
+  "url": "https://extremely-lengthy-url-2/"
+}
+
+### 3. Create shortcut for url from application/gzip body
+POST http://127.0.0.1:8080
+Content-Type: application/gzip
+Content-Encoding: gzip
+
+< ./compressed_request.gz
+
+### 4. Create shortcuts for urls batch from application/json body
+POST http://127.0.0.1:8080/api/shorten/batch
+Content-Type: application/json
+
+[
+  {
+    "correlation_id":"056d98a6-f001-4526-b5d9-071900d57363",
+    "original_url":"https://extremely-lengthy-url-4/"
+  },
+  {
+    "correlation_id":"6c9fa3c4-469c-4541-a636-66b7f8b5cbe2",
+    "original_url":"https://extremely-lengthy-url-5/"
+  }
+]
+
+### 5. Get origin url from shortcut
+# @no-redirect
+GET http://127.0.0.1:8080/1
+
+### 6. Get urls created by current user
+GET http://127.0.0.1:8080/api/user/urls
+
+### 7. Remove urls created by current user
+DELETE http://127.0.0.1:8080/api/user/urls
+Content-Type: application/json
+
+[
+  "1",
+  "3"
+]
+
+### 8. Check connection to database
+GET http://127.0.0.1:8080/ping/

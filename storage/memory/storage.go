@@ -10,13 +10,15 @@ import (
 
 var _ inter.URLStorage = (*Storage)(nil)
 
+// Storage keeps memory storage dependencies.
 type Storage struct {
+	sync.RWMutex
+
 	id   int
 	urls map[int]schema.URL
-	sync.RWMutex
 }
 
-// New creates a new memory storage.
+// New creates a new memory Storage.
 func New() (*Storage, error) {
 	var st Storage
 	st.urls = make(map[int]schema.URL)
@@ -30,6 +32,7 @@ func (st *Storage) Close() error {
 	return nil
 }
 
+// Ping implements the storage ping interface.
 func (st *Storage) Ping() error {
 	return pkg.ErrNoDBConnection
 }

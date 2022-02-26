@@ -7,8 +7,9 @@ import (
 	"github.com/vstdy0/go-project/service/shortener/v1"
 )
 
-func NewServer(svc *shortener.Service, cfg common.Config) *http.Server {
-	router := Router(svc, cfg)
+// NewServer returns server.
+func NewServer(svc *shortener.Service, config common.Config) *http.Server {
+	router := NewRouter(svc, config)
 
-	return &http.Server{Addr: cfg.ServerAddress, Handler: router}
+	return &http.Server{Addr: config.ServerAddress, Handler: router}
 }
