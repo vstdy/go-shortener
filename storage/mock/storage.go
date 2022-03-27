@@ -10,34 +10,34 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
-	model "github.com/vstdy0/go-project/model"
+	model "github.com/vstdy0/go-shortener/model"
 )
 
-// MockURLStorage is a mock of URLStorage interface.
-type MockURLStorage struct {
+// MockStorage is a mock of Storage interface.
+type MockStorage struct {
 	ctrl     *gomock.Controller
-	recorder *MockURLStorageMockRecorder
+	recorder *MockStorageMockRecorder
 }
 
-// MockURLStorageMockRecorder is the mock recorder for MockURLStorage.
-type MockURLStorageMockRecorder struct {
-	mock *MockURLStorage
+// MockStorageMockRecorder is the mock recorder for MockStorage.
+type MockStorageMockRecorder struct {
+	mock *MockStorage
 }
 
-// NewMockURLStorage creates a new mock instance.
-func NewMockURLStorage(ctrl *gomock.Controller) *MockURLStorage {
-	mock := &MockURLStorage{ctrl: ctrl}
-	mock.recorder = &MockURLStorageMockRecorder{mock}
+// NewMockStorage creates a new mock instance.
+func NewMockStorage(ctrl *gomock.Controller) *MockStorage {
+	mock := &MockStorage{ctrl: ctrl}
+	mock.recorder = &MockStorageMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockURLStorage) EXPECT() *MockURLStorageMockRecorder {
+func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 	return m.recorder
 }
 
 // AddURLs mocks base method.
-func (m *MockURLStorage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, error) {
+func (m *MockStorage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddURLs", ctx, objs)
 	ret0, _ := ret[0].([]model.URL)
@@ -46,13 +46,13 @@ func (m *MockURLStorage) AddURLs(ctx context.Context, objs []model.URL) ([]model
 }
 
 // AddURLs indicates an expected call of AddURLs.
-func (mr *MockURLStorageMockRecorder) AddURLs(ctx, objs interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) AddURLs(ctx, objs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddURLs", reflect.TypeOf((*MockURLStorage)(nil).AddURLs), ctx, objs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddURLs", reflect.TypeOf((*MockStorage)(nil).AddURLs), ctx, objs)
 }
 
 // Close mocks base method.
-func (m *MockURLStorage) Close() error {
+func (m *MockStorage) Close() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Close")
 	ret0, _ := ret[0].(error)
@@ -60,13 +60,13 @@ func (m *MockURLStorage) Close() error {
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockURLStorageMockRecorder) Close() *gomock.Call {
+func (mr *MockStorageMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockURLStorage)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStorage)(nil).Close))
 }
 
 // GetURL mocks base method.
-func (m *MockURLStorage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
+func (m *MockStorage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetURL", ctx, urlID)
 	ret0, _ := ret[0].(model.URL)
@@ -75,13 +75,13 @@ func (m *MockURLStorage) GetURL(ctx context.Context, urlID int) (model.URL, erro
 }
 
 // GetURL indicates an expected call of GetURL.
-func (mr *MockURLStorageMockRecorder) GetURL(ctx, urlID interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) GetURL(ctx, urlID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetURL", reflect.TypeOf((*MockURLStorage)(nil).GetURL), ctx, urlID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetURL", reflect.TypeOf((*MockStorage)(nil).GetURL), ctx, urlID)
 }
 
 // GetUserURLs mocks base method.
-func (m *MockURLStorage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
+func (m *MockStorage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserURLs", ctx, userID)
 	ret0, _ := ret[0].([]model.URL)
@@ -90,13 +90,13 @@ func (m *MockURLStorage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]m
 }
 
 // GetUserURLs indicates an expected call of GetUserURLs.
-func (mr *MockURLStorageMockRecorder) GetUserURLs(ctx, userID interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) GetUserURLs(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserURLs", reflect.TypeOf((*MockURLStorage)(nil).GetUserURLs), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserURLs", reflect.TypeOf((*MockStorage)(nil).GetUserURLs), ctx, userID)
 }
 
 // HasURL mocks base method.
-func (m *MockURLStorage) HasURL(ctx context.Context, urlID int) (bool, error) {
+func (m *MockStorage) HasURL(ctx context.Context, urlID int) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasURL", ctx, urlID)
 	ret0, _ := ret[0].(bool)
@@ -105,27 +105,27 @@ func (m *MockURLStorage) HasURL(ctx context.Context, urlID int) (bool, error) {
 }
 
 // HasURL indicates an expected call of HasURL.
-func (mr *MockURLStorageMockRecorder) HasURL(ctx, urlID interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) HasURL(ctx, urlID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasURL", reflect.TypeOf((*MockURLStorage)(nil).HasURL), ctx, urlID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasURL", reflect.TypeOf((*MockStorage)(nil).HasURL), ctx, urlID)
 }
 
 // Ping mocks base method.
-func (m *MockURLStorage) Ping() error {
+func (m *MockStorage) Ping() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ping")
+	ret := m.ctrl.Call(m, "Ping")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Ping indicates an expected call of Ping.
-func (mr *MockURLStorageMockRecorder) Ping() *gomock.Call {
+func (mr *MockStorageMockRecorder) Ping() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ping", reflect.TypeOf((*MockURLStorage)(nil).Ping))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStorage)(nil).Ping))
 }
 
 // RemoveUserURLs mocks base method.
-func (m *MockURLStorage) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
+func (m *MockStorage) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveUserURLs", ctx, objs)
 	ret0, _ := ret[0].(error)
@@ -133,7 +133,7 @@ func (m *MockURLStorage) RemoveUserURLs(ctx context.Context, objs []model.URL) e
 }
 
 // RemoveUserURLs indicates an expected call of RemoveUserURLs.
-func (mr *MockURLStorageMockRecorder) RemoveUserURLs(ctx, objs interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) RemoveUserURLs(ctx, objs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserURLs", reflect.TypeOf((*MockURLStorage)(nil).RemoveUserURLs), ctx, objs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserURLs", reflect.TypeOf((*MockStorage)(nil).RemoveUserURLs), ctx, objs)
 }

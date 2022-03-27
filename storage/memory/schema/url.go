@@ -3,7 +3,7 @@ package schema
 import (
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
+	"github.com/vstdy0/go-shortener/model"
 )
 
 type (

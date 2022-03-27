@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
+	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
 )
 
 // newMigrateCmd creates a new migrate cmd.

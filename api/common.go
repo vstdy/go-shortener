@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/api/model"
-	"github.com/vstdy0/go-project/pkg"
+	"github.com/vstdy0/go-shortener/api/model"
+	"github.com/vstdy0/go-shortener/pkg"
 )
 
 func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
@@ -21,11 +21,11 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 
 	obj := req.ToCanonical(userID)
 	svcErr := h.service.AddURL(ctx, &obj)
-	if svcErr != nil && !errors.Is(svcErr, pkg.ErrIntegrityViolation) {
+	if svcErr != nil && !errors.Is(svcErr, pkg.ErrAlreadyExists) {
 		return nil, svcErr
 	}
 
-	res, err := json.Marshal(model.AddURLResponse{Result: h.config.BaseURL + "/" + strconv.Itoa(obj.ID)})
+	res, err := json.Marshal(model.NewURLRespFromCanon(obj, h.config.BaseURL))
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []
 
 	obj := req.ToCanonical(userID)
 	svcErr := h.service.AddURL(ctx, &obj)
-	if svcErr != nil && !errors.Is(svcErr, pkg.ErrIntegrityViolation) {
+	if svcErr != nil && !errors.Is(svcErr, pkg.ErrAlreadyExists) {
 		return nil, svcErr
 	}
 
@@ -48,7 +48,7 @@ func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []
 }
 
 func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
-	var batchReq model.AddURLsBatchRequest
+	var batchReq model.AddURLsBatchReq
 	if err := json.Unmarshal(body, &batchReq); err != nil {
 		return nil, err
 	}
@@ -59,11 +59,11 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 	}
 
 	svcErr := h.service.AddBatchURLs(ctx, &objs)
-	if svcErr != nil && !errors.Is(svcErr, pkg.ErrIntegrityViolation) {
+	if svcErr != nil && !errors.Is(svcErr, pkg.ErrAlreadyExists) {
 		return nil, svcErr
 	}
 
-	batchRes := model.NewURLsBatchFromCanonical(objs, h.config.BaseURL)
+	batchRes := model.NewURLsBatchRespFromCanon(objs, h.config.BaseURL)
 
 	res, err := json.Marshal(batchRes)
 	if err != nil {

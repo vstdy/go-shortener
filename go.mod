@@ -1,4 +1,4 @@
-module github.com/vstdy0/go-project
+module github.com/vstdy0/go-shortener
 
 go 1.17
 

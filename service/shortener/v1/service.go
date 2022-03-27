@@ -9,17 +9,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/pkg/logging"
-	"github.com/vstdy0/go-project/service/shortener"
-	inter "github.com/vstdy0/go-project/storage"
+	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy0/go-shortener/service/shortener"
+	inter "github.com/vstdy0/go-shortener/storage"
 )
 
 const (
 	serviceName = "shortener"
 )
 
-var _ shortener.URLService = (*Service)(nil)
+var _ shortener.Service = (*Service)(nil)
 
 type (
 	// Service keeps service dependencies.
@@ -28,7 +28,7 @@ type (
 
 		delChan chan model.URL
 		config  Config
-		storage inter.URLStorage
+		storage inter.Storage
 	}
 
 	// ServiceOption defines functional argument for Service constructor.
@@ -45,7 +45,7 @@ func WithConfig(config Config) ServiceOption {
 }
 
 // WithStorage sets Storage.
-func WithStorage(st inter.URLStorage) ServiceOption {
+func WithStorage(st inter.Storage) ServiceOption {
 	return func(svc *Service) error {
 		svc.storage = st
 

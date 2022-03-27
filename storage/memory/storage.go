@@ -3,12 +3,12 @@ package memory
 import (
 	"sync"
 
-	"github.com/vstdy0/go-project/pkg"
-	inter "github.com/vstdy0/go-project/storage"
-	"github.com/vstdy0/go-project/storage/memory/schema"
+	"github.com/vstdy0/go-shortener/pkg"
+	inter "github.com/vstdy0/go-shortener/storage"
+	"github.com/vstdy0/go-shortener/storage/memory/schema"
 )
 
-var _ inter.URLStorage = (*Storage)(nil)
+var _ inter.Storage = (*Storage)(nil)
 
 // Storage keeps memory storage dependencies.
 type Storage struct {

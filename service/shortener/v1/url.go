@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/pkg"
-	"github.com/vstdy0/go-project/service/shortener/v1/validator"
+	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/service/shortener/v1/validator"
 )
 
 // AddURL adds given object to storage.
@@ -20,7 +20,7 @@ func (svc *Service) AddURL(ctx context.Context, obj *model.URL) error {
 
 	objs, err := svc.storage.AddURLs(ctx, []model.URL{*obj})
 	if err != nil {
-		if errors.Is(err, pkg.ErrIntegrityViolation) {
+		if errors.Is(err, pkg.ErrAlreadyExists) {
 			obj.ID = objs[0].ID
 		}
 		return err
@@ -44,7 +44,7 @@ func (svc *Service) AddBatchURLs(ctx context.Context, objs *[]model.URL) error {
 
 	addedObjs, err := svc.storage.AddURLs(ctx, *objs)
 	if err != nil {
-		if errors.Is(err, pkg.ErrIntegrityViolation) {
+		if errors.Is(err, pkg.ErrAlreadyExists) {
 			*objs = addedObjs
 		}
 		return err
@@ -81,7 +81,7 @@ func (svc *Service) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.
 
 // RemoveUserURLs removes current user objects with given ids.
 func (svc *Service) RemoveUserURLs(objs []model.URL) error {
-	if objs == nil {
+	if len(objs) == 0 {
 		return fmt.Errorf("%w: ids: empty", pkg.ErrInvalidInput)
 	}
 

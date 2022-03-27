@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/pkg"
+	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy0/go-shortener/pkg"
 )
 
 func (s *TestSuite) TestURLs_HasURL() {
@@ -54,7 +54,7 @@ func (s *TestSuite) TestURLs_AddURLs() {
 
 		res, err := s.storage.AddURLs(s.ctx, existingURL)
 		s.Require().Error(err)
-		s.Require().True(errors.Is(err, pkg.ErrIntegrityViolation))
+		s.Require().True(errors.Is(err, pkg.ErrAlreadyExists))
 		s.Assert().EqualValues(existingURL[0].ID, res[0].ID)
 	})
 }

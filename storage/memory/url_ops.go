@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/storage/memory/schema"
+	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy0/go-shortener/storage/memory/schema"
 )
 
 // HasURL checks existence of the url object with given id

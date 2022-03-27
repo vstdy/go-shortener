@@ -11,20 +11,19 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
 
-	"github.com/vstdy0/go-project/api/model"
-	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
-	"github.com/vstdy0/go-project/pkg"
-	"github.com/vstdy0/go-project/service/shortener"
+	"github.com/vstdy0/go-shortener/api/model"
+	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/service/shortener"
 )
 
 // Handler keeps handler dependencies.
 type Handler struct {
-	service shortener.URLService
-	config  common.Config
+	config  Config
+	service shortener.Service
 }
 
 // NewHandler returns a new Handler instance.
-func NewHandler(service shortener.URLService, config common.Config) Handler {
+func NewHandler(service shortener.Service, config Config) Handler {
 	return Handler{service: service, config: config}
 }
 
@@ -52,7 +51,12 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 		res, err = h.plainURLResponse(r.Context(), userID, body)
 	}
 	if err != nil {
-		if !errors.Is(err, pkg.ErrIntegrityViolation) {
+		if errors.Is(err, pkg.ErrInvalidInput) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !errors.Is(err, pkg.ErrAlreadyExists) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -93,7 +97,12 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.urlsBatchResponse(r.Context(), userID, body)
 	if err != nil {
-		if !errors.Is(err, pkg.ErrIntegrityViolation) {
+		if errors.Is(err, pkg.ErrInvalidInput) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !errors.Is(err, pkg.ErrAlreadyExists) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -104,6 +113,7 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		return
 	}
 
 	w.Header().Set("Content-Type", contentType)
@@ -124,7 +134,12 @@ func (h Handler) getShortenedURL(w http.ResponseWriter, r *http.Request) {
 
 	url, err := h.service.GetURL(r.Context(), urlID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, pkg.ErrInvalidInput) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -147,16 +162,16 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	urls, err := h.service.GetUserURLs(r.Context(), userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	userURLs := model.UserURLsFromCanonical(urls, h.config.BaseURL)
-
-	if userURLs == nil {
+	if len(urls) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+
+	userURLs := model.NewUserURLsFromCanon(urls, h.config.BaseURL)
 
 	res, err := json.Marshal(userURLs)
 	if err != nil {
@@ -187,7 +202,7 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	objs, err := model.URLsToDeleteToCanonical(ids, userID)
+	objs, err := model.URLsToDelToCanon(ids, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -195,6 +210,11 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.RemoveUserURLs(objs)
 	if err != nil {
+		if errors.Is(err, pkg.ErrInvalidInput) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
