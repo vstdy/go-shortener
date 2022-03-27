@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/vstdy0/go-project/storage/psql/fixtures"
-	"github.com/vstdy0/go-project/testutils"
+	"github.com/vstdy0/go-shortener/storage/psql/fixtures"
+	"github.com/vstdy0/go-shortener/testutils"
 )
 
 type TestSuite struct {
@@ -53,8 +53,6 @@ func (s *TestSuite) TearDownSuite() {
 	s.Require().NoError(s.container.Terminate(ctx))
 }
 
-func TestSuite_PostgreSQLStorage(t *testing.T) {
-	t.Skip("skipping test.")
-
+func TestSuite_PSQLStorage(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

@@ -7,12 +7,12 @@ import (
 	"os"
 	"sync"
 
-	"github.com/vstdy0/go-project/pkg"
-	inter "github.com/vstdy0/go-project/storage"
-	"github.com/vstdy0/go-project/storage/file/schema"
+	"github.com/vstdy0/go-shortener/pkg"
+	inter "github.com/vstdy0/go-shortener/storage"
+	"github.com/vstdy0/go-shortener/storage/file/schema"
 )
 
-var _ inter.URLStorage = (*Storage)(nil)
+var _ inter.Storage = (*Storage)(nil)
 
 type (
 	// Storage keeps file storage dependencies.

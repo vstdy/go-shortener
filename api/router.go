@@ -1,15 +1,16 @@
 package api
 
 import (
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
-	"github.com/vstdy0/go-project/service/shortener"
+	"github.com/vstdy0/go-shortener/service/shortener"
 )
 
 // NewRouter returns router.
-func NewRouter(svc shortener.URLService, config common.Config) chi.Router {
+func NewRouter(svc shortener.Service, config Config, timeout time.Duration) chi.Router {
 	h := NewHandler(svc, config)
 	r := chi.NewRouter()
 
@@ -18,7 +19,7 @@ func NewRouter(svc shortener.URLService, config common.Config) chi.Router {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Timeout(config.Timeout))
+	r.Use(middleware.Timeout(timeout))
 	r.Use(gzipDecompressRequest)
 	r.Use(gzipCompressResponse)
 	r.Use(cookieAuth(config.SecretKey))

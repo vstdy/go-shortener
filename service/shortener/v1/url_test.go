@@ -1,20 +1,21 @@
 package shortener
 
 import (
+	"context"
 	"errors"
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/pkg"
-	storagemock "github.com/vstdy0/go-project/storage/mock"
+	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy0/go-shortener/pkg"
+	storageMock "github.com/vstdy0/go-shortener/storage/mock"
 )
 
-func (s *TestSuite) TestURLService_AddURL() {
+func (s *TestSuite) TestService_AddURL() {
 	type testCase struct {
 		name         string
-		prepareMocks func(URLStorageMock *storagemock.MockURLStorage) model.URL
+		prepareMocks func(StorageMock *storageMock.MockStorage) model.URL
 		errExpected  bool
 		errTarget    error
 		errContains  string
@@ -23,7 +24,7 @@ func (s *TestSuite) TestURLService_AddURL() {
 	testCases := []testCase{
 		{
 			name: "Fail: invalid input (empty url)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) model.URL {
 				return model.URL{
 					UserID: uuid.New(),
 					URL:    "",
@@ -35,7 +36,7 @@ func (s *TestSuite) TestURLService_AddURL() {
 		},
 		{
 			name: "Fail: invalid input (invalid url)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) model.URL {
 				return model.URL{
 					UserID: uuid.New(),
 					URL:    "htp//invalid-url.com/",
@@ -47,7 +48,7 @@ func (s *TestSuite) TestURLService_AddURL() {
 		},
 		{
 			name: "OK",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) model.URL {
 				input := model.URL{
 					UserID: uuid.New(),
 					URL:    "https://extremely-lengthy-url.com/",
@@ -61,7 +62,7 @@ func (s *TestSuite) TestURLService_AddURL() {
 					},
 				}
 
-				URLStorageMock.EXPECT().
+				StorageMock.EXPECT().
 					AddURLs(gomock.Any(), []model.URL{input}).
 					Return(urls, nil)
 
@@ -92,10 +93,10 @@ func (s *TestSuite) TestURLService_AddURL() {
 	}
 }
 
-func (s *TestSuite) TestURLService_AddBatchURLs() {
+func (s *TestSuite) TestService_AddBatchURLs() {
 	type testCase struct {
 		name         string
-		prepareMocks func(URLStorageMock *storagemock.MockURLStorage) []model.URL
+		prepareMocks func(StorageMock *storageMock.MockStorage) []model.URL
 		errExpected  bool
 		errTarget    error
 		errContains  string
@@ -104,7 +105,7 @@ func (s *TestSuite) TestURLService_AddBatchURLs() {
 	testCases := []testCase{
 		{
 			name: "Fail: invalid input (empty correlation_id)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				return []model.URL{
 					{
 						CorrelationID: uuid.NewString(),
@@ -124,7 +125,7 @@ func (s *TestSuite) TestURLService_AddBatchURLs() {
 		},
 		{
 			name: "Fail: invalid input (empty url)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				return []model.URL{
 					{
 						CorrelationID: uuid.NewString(),
@@ -144,7 +145,7 @@ func (s *TestSuite) TestURLService_AddBatchURLs() {
 		},
 		{
 			name: "Fail: invalid input (invalid url)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				return []model.URL{
 					{
 						CorrelationID: uuid.NewString(),
@@ -164,7 +165,7 @@ func (s *TestSuite) TestURLService_AddBatchURLs() {
 		},
 		{
 			name: "OK",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				input := []model.URL{
 					{
 						CorrelationID: uuid.NewString(),
@@ -193,7 +194,7 @@ func (s *TestSuite) TestURLService_AddBatchURLs() {
 					},
 				}
 
-				URLStorageMock.EXPECT().
+				StorageMock.EXPECT().
 					AddURLs(gomock.Any(), input).
 					Return(urls, nil)
 
@@ -224,10 +225,10 @@ func (s *TestSuite) TestURLService_AddBatchURLs() {
 	}
 }
 
-func (s *TestSuite) TestURLService_GetURL() {
+func (s *TestSuite) TestService_GetURL() {
 	type testCase struct {
 		name         string
-		prepareMocks func(URLStorageMock *storagemock.MockURLStorage) int
+		prepareMocks func(StorageMock *storageMock.MockStorage) int
 		errExpected  bool
 		errTarget    error
 		errContains  string
@@ -236,7 +237,7 @@ func (s *TestSuite) TestURLService_GetURL() {
 	testCases := []testCase{
 		{
 			name: "Fail: invalid input (zero id)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) int {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) int {
 				return 0
 			},
 			errExpected: true,
@@ -245,7 +246,7 @@ func (s *TestSuite) TestURLService_GetURL() {
 		},
 		{
 			name: "Fail: invalid input (negative id)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) int {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) int {
 				return -1
 			},
 			errExpected: true,
@@ -254,7 +255,7 @@ func (s *TestSuite) TestURLService_GetURL() {
 		},
 		{
 			name: "OK",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) int {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) int {
 				input := 1
 
 				url := model.URL{
@@ -263,7 +264,7 @@ func (s *TestSuite) TestURLService_GetURL() {
 					URL:    "https://extremely-lengthy-url.com/",
 				}
 
-				URLStorageMock.EXPECT().
+				StorageMock.EXPECT().
 					GetURL(gomock.Any(), input).
 					Return(url, nil)
 
@@ -294,10 +295,10 @@ func (s *TestSuite) TestURLService_GetURL() {
 	}
 }
 
-func (s *TestSuite) TestURLService_GetUserURL() {
+func (s *TestSuite) TestService_GetUserURL() {
 	type testCase struct {
 		name         string
-		prepareMocks func(URLStorageMock *storagemock.MockURLStorage) uuid.UUID
+		prepareMocks func(StorageMock *storageMock.MockStorage) uuid.UUID
 		errExpected  bool
 		errTarget    error
 		errContains  string
@@ -306,7 +307,7 @@ func (s *TestSuite) TestURLService_GetUserURL() {
 	testCases := []testCase{
 		{
 			name: "OK",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) uuid.UUID {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) uuid.UUID {
 				input := uuid.New()
 
 				urls := []model.URL{
@@ -322,7 +323,7 @@ func (s *TestSuite) TestURLService_GetUserURL() {
 					},
 				}
 
-				URLStorageMock.EXPECT().
+				StorageMock.EXPECT().
 					GetUserURLs(gomock.Any(), input).
 					Return(urls, nil)
 
@@ -353,10 +354,10 @@ func (s *TestSuite) TestURLService_GetUserURL() {
 	}
 }
 
-func (s *TestSuite) TestURLService_RemoveUserURLs() {
+func (s *TestSuite) TestService_RemoveUserURLs() {
 	type testCase struct {
 		name         string
-		prepareMocks func(URLStorageMock *storagemock.MockURLStorage) []model.URL
+		prepareMocks func(StorageMock *storageMock.MockStorage) []model.URL
 		errExpected  bool
 		errTarget    error
 		errContains  string
@@ -365,7 +366,7 @@ func (s *TestSuite) TestURLService_RemoveUserURLs() {
 	testCases := []testCase{
 		{
 			name: "Fail: invalid input (empty ids list)",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				return nil
 			},
 			errExpected: true,
@@ -373,8 +374,8 @@ func (s *TestSuite) TestURLService_RemoveUserURLs() {
 			errContains: "ids",
 		},
 		{
-			name: "OK with full buffer",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			name: "OK: full buffer",
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				input := []model.URL{
 					{
 						ID:     1,
@@ -388,9 +389,9 @@ func (s *TestSuite) TestURLService_RemoveUserURLs() {
 
 				s.Add(1)
 
-				URLStorageMock.EXPECT().
+				StorageMock.EXPECT().
 					RemoveUserURLs(gomock.Any(), input).
-					Do(func(arg0, arg1 interface{}) { s.Done() }).
+					Do(func(ctx context.Context, objs []model.URL) { s.Done() }).
 					Return(nil)
 
 				return input
@@ -398,8 +399,8 @@ func (s *TestSuite) TestURLService_RemoveUserURLs() {
 			errExpected: false,
 		},
 		{
-			name: "OK with buffer wipe timeout",
-			prepareMocks: func(URLStorageMock *storagemock.MockURLStorage) []model.URL {
+			name: "OK: buffer wipe timeout",
+			prepareMocks: func(StorageMock *storageMock.MockStorage) []model.URL {
 				input := []model.URL{
 					{
 						ID:     1,
@@ -409,9 +410,9 @@ func (s *TestSuite) TestURLService_RemoveUserURLs() {
 
 				s.Add(1)
 
-				URLStorageMock.EXPECT().
+				StorageMock.EXPECT().
 					RemoveUserURLs(gomock.Any(), input).
-					Do(func(arg0, arg1 interface{}) { s.Done() }).
+					Do(func(ctx context.Context, objs []model.URL) { s.Done() }).
 					Return(nil)
 
 				return input

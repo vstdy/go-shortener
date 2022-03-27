@@ -1,3 +1,4 @@
+//go:generate mockgen -source=interface.go -destination=./mock/service.go -package=servicemock
 package shortener
 
 import (
@@ -6,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
+	"github.com/vstdy0/go-shortener/model"
 )
 
-type URLService interface {
+type Service interface {
 	io.Closer
 
 	// AddURL adds given object to storage.

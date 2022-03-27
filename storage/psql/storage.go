@@ -11,9 +11,9 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
 
-	inter "github.com/vstdy0/go-project/storage"
-	"github.com/vstdy0/go-project/storage/psql/migrations"
-	"github.com/vstdy0/go-project/storage/psql/schema"
+	inter "github.com/vstdy0/go-shortener/storage"
+	"github.com/vstdy0/go-shortener/storage/psql/migrations"
+	"github.com/vstdy0/go-shortener/storage/psql/schema"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 	dbOperationLoggingKey = "db-operation"
 )
 
-var _ inter.URLStorage = (*Storage)(nil)
+var _ inter.Storage = (*Storage)(nil)
 
 type (
 	// Storage keeps psql storage dependencies.

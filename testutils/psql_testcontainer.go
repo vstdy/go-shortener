@@ -98,12 +98,23 @@ func NewPostgreSQLContainer(ctx context.Context, opts ...PostgreSQLContainerOpti
 		return nil, fmt.Errorf("creating container: %w", err)
 	}
 
-	if err := container.Start(ctx); err != nil {
+	termCont := func() {
+		termCtx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer ctxCancel()
+
+		container.Terminate(termCtx)
+	}
+
+	if err = container.Start(ctx); err != nil {
+		termCont()
+
 		return nil, fmt.Errorf("starting container: %w", err)
 	}
 
 	mappedPort, err := container.MappedPort(ctx, nat.Port(containerPort))
 	if err != nil {
+		termCont()
+
 		return nil, fmt.Errorf("getting mapped port for (%s): %w", containerPort, err)
 	}
 	config.MappedPort = mappedPort.Port()

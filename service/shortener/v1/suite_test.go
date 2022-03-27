@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	storagemock "github.com/vstdy0/go-project/storage/mock"
+	storagemock "github.com/vstdy0/go-shortener/storage/mock"
 )
 
 type TestSuite struct {
@@ -17,14 +17,14 @@ type TestSuite struct {
 	sync.WaitGroup
 
 	svc    *Service
-	stMock *storagemock.MockURLStorage
+	stMock *storagemock.MockStorage
 
 	ctx context.Context
 }
 
 func (s *TestSuite) SetupSuite() {
 	mockCtrl := gomock.NewController(s.T())
-	urlStorageMock := storagemock.NewMockURLStorage(mockCtrl)
+	urlStorageMock := storagemock.NewMockStorage(mockCtrl)
 
 	config := Config{
 		DelReqTimeout:     5 * time.Second,
@@ -43,6 +43,6 @@ func (s *TestSuite) SetupSuite() {
 	s.ctx = context.TODO()
 }
 
-func TestSuite_URLService(t *testing.T) {
+func TestSuite_Service(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

@@ -14,9 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vstdy0/go-project/api"
-	"github.com/vstdy0/go-project/cmd/shortener/cmd/common"
-	"github.com/vstdy0/go-project/pkg"
+	"github.com/vstdy0/go-shortener/api"
+	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
 )
 
 const (
@@ -54,17 +53,15 @@ func newRootCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := common.GetConfigFromCmdCtx(cmd)
 
-			svc, err := config.BuildService(config.StorageType)
+			svc, err := config.BuildService()
 			if err != nil {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
-			defer func() {
-				if err = svc.Close(); err != nil {
-					log.Error().Err(err).Msg("Shutting down the app")
-				}
-			}()
 
-			srv := api.NewServer(svc, config)
+			srv, err := api.NewServer(svc, config.Server, config.Timeout)
+			if err != nil {
+				return fmt.Errorf("app initialization: server building: %w", err)
+			}
 
 			go func() {
 				if err = srv.ListenAndServe(); err != http.ErrServerClosed {
@@ -82,6 +79,9 @@ func newRootCmd() *cobra.Command {
 			if err = srv.Shutdown(shutdownCtx); err != nil {
 				return fmt.Errorf("server shutdown failed: %w", err)
 			}
+			if err = svc.Close(); err != nil {
+				return fmt.Errorf("service shutdown failed: %w", err)
+			}
 			log.Info().Msg("server stopped")
 
 			return nil
@@ -93,8 +93,8 @@ func newRootCmd() *cobra.Command {
 	cmd.PersistentFlags().String(flagLogLevel, "info", "Logger level [debug,info,warn,error,fatal]")
 	cmd.PersistentFlags().Duration(flagTimeout, config.Timeout, "Request timeout")
 	cmd.PersistentFlags().StringP(flagDatabaseDSN, "d", config.PSQLStorage.DSN, "Database source name")
-	cmd.Flags().StringP(flagServerAddress, "a", config.ServerAddress, "Server address")
-	cmd.Flags().StringP(flagBaseURL, "b", config.BaseURL, "Base URL")
+	cmd.Flags().StringP(flagServerAddress, "a", config.Server.ServerAddress, "Server address")
+	cmd.Flags().StringP(flagBaseURL, "b", config.Server.BaseURL, "Base URL")
 	cmd.Flags().StringP(flagStorageType, "s", config.StorageType, "Storage type [memory, file, psql]")
 	cmd.Flags().StringP(flagFileStoragePath, "f", config.FileStorage.FileStoragePath, "File storage path")
 
@@ -154,10 +154,6 @@ func setupConfig(cmd *cobra.Command) error {
 
 	config.Timeout = viper.GetDuration(flagTimeout)
 	common.SetConfigToCmdCtx(cmd, config)
-
-	if config.SecretKey == "" {
-		return fmt.Errorf("%s config: %w", envSecretKey, pkg.ErrNoValue)
-	}
 
 	return nil
 }

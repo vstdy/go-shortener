@@ -4,13 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-project/model"
-	"github.com/vstdy0/go-project/pkg"
-	"github.com/vstdy0/go-project/storage/psql/schema"
+	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/storage/psql/schema"
 )
 
 const tableName = "url"
@@ -50,7 +48,7 @@ func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, 
 
 	for _, obj := range dbObjs {
 		if obj.Updated {
-			return addedObjs, pkg.ErrIntegrityViolation
+			return addedObjs, pkg.ErrAlreadyExists
 		}
 	}
 
@@ -94,7 +92,7 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 
 	objs, err := dbObjs.ToCanonical()
 	if err != nil {
-		return nil, fmt.Errorf("conveting to canonical models: %w", err)
+		return nil, err
 	}
 
 	return objs, nil

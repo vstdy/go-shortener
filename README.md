@@ -1,6 +1,7 @@
 # Shortener
 
-Application is a tool that creates a short, unique URL that will redirect to the specific website of your choosing
+The application is a tool that creates a short, unique URL that will redirect to the specific website of your choosing  
+Is a project of the [course](https://practicum.yandex.ru/profile/go-developer/)
 
 ## REST API
 

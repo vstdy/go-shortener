@@ -5,24 +5,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vstdy0/go-project/pkg"
-	"github.com/vstdy0/go-project/service/shortener/v1"
-	"github.com/vstdy0/go-project/storage"
-	"github.com/vstdy0/go-project/storage/file"
-	"github.com/vstdy0/go-project/storage/memory"
-	"github.com/vstdy0/go-project/storage/psql"
+	"github.com/vstdy0/go-shortener/api"
+	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/service/shortener/v1"
+	"github.com/vstdy0/go-shortener/storage"
+	"github.com/vstdy0/go-shortener/storage/file"
+	"github.com/vstdy0/go-shortener/storage/memory"
+	"github.com/vstdy0/go-shortener/storage/psql"
 )
 
 // Config combines sub-configs for all services, storages and providers.
 type Config struct {
-	Timeout       time.Duration
-	ServerAddress string           `mapstructure:"server_address"`
-	BaseURL       string           `mapstructure:"base_url"`
-	SecretKey     string           `mapstructure:"secret_key"`
-	StorageType   string           `mapstructure:"storage_type"`
-	URLService    shortener.Config `mapstructure:"url_service,squash"`
-	FileStorage   file.Config      `mapstructure:"file_storage,squash"`
-	PSQLStorage   psql.Config      `mapstructure:"psql_storage,squash"`
+	Timeout     time.Duration
+	StorageType string           `mapstructure:"storage_type"`
+	Server      api.Config       `mapstructure:"server,squash"`
+	URLService  shortener.Config `mapstructure:"url_service,squash"`
+	FileStorage file.Config      `mapstructure:"file_storage,squash"`
+	PSQLStorage psql.Config      `mapstructure:"psql_storage,squash"`
 }
 
 const (
@@ -34,14 +33,12 @@ const (
 // BuildDefaultConfig builds a Config with default values.
 func BuildDefaultConfig() Config {
 	return Config{
-		Timeout:       5 * time.Second,
-		ServerAddress: "0.0.0.0:8080",
-		BaseURL:       "http://127.0.0.1:8080",
-		SecretKey:     "secret_key",
-		StorageType:   psqlStorage,
-		URLService:    shortener.NewDefaultConfig(),
-		FileStorage:   file.NewDefaultConfig(),
-		PSQLStorage:   psql.NewDefaultConfig(),
+		Timeout:     5 * time.Second,
+		StorageType: psqlStorage,
+		Server:      api.NewDefaultConfig(),
+		URLService:  shortener.NewDefaultConfig(),
+		FileStorage: file.NewDefaultConfig(),
+		PSQLStorage: psql.NewDefaultConfig(),
 	}
 }
 
@@ -87,11 +84,11 @@ func (config Config) BuildPsqlStorage() (*psql.Storage, error) {
 }
 
 // BuildService builds shortener.Service dependency.
-func (config Config) BuildService(storageType string) (*shortener.Service, error) {
-	var st storage.URLStorage
+func (config Config) BuildService() (*shortener.Service, error) {
+	var st storage.Storage
 	var err error
 
-	switch storageType {
+	switch config.StorageType {
 	case memoryStorage:
 		st, err = config.BuildMemoryStorage()
 	case fileStorage:
