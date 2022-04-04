@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/api/model"
+	"github.com/vstdy0/go-shortener/api/rest/model"
 	"github.com/vstdy0/go-shortener/pkg"
 )
 
@@ -34,9 +34,7 @@ func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []b
 }
 
 func (h Handler) plainURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {
-	req := model.AddURLRequest{
-		URL: string(body),
-	}
+	req := model.NewURLReqFromStr(string(body))
 
 	obj := req.ToCanonical(userID)
 	svcErr := h.service.AddURL(ctx, &obj)
@@ -58,7 +56,7 @@ func (h Handler) urlsBatchResponse(ctx context.Context, userID uuid.UUID, body [
 		return nil, err
 	}
 
-	svcErr := h.service.AddBatchURLs(ctx, &objs)
+	svcErr := h.service.AddURLsBatch(ctx, &objs)
 	if svcErr != nil && !errors.Is(svcErr, pkg.ErrAlreadyExists) {
 		return nil, svcErr
 	}

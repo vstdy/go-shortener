@@ -15,14 +15,14 @@ type Service interface {
 
 	// AddURL adds given object to storage.
 	AddURL(ctx context.Context, obj *model.URL) error
-	// AddBatchURLs adds given batch of objects to storage.
-	AddBatchURLs(ctx context.Context, objs *[]model.URL) error
+	// AddURLsBatch adds given batch of objects to storage.
+	AddURLsBatch(ctx context.Context, objs *[]model.URL) error
 	// GetURL gets object with given id.
 	GetURL(ctx context.Context, urlID int) (string, error)
 	// GetUserURLs gets current user objects.
 	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
 	// RemoveUserURLs removes current user objects with given ids.
-	RemoveUserURLs(objs []model.URL) error
+	RemoveUserURLs(ctx context.Context, objs []model.URL) error
 	// Ping verifies a connection to the database is still alive.
 	Ping() error
 }

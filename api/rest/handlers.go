@@ -1,6 +1,7 @@
-package api
+package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -10,10 +11,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/rs/zerolog"
 
-	"github.com/vstdy0/go-shortener/api/model"
+	"github.com/vstdy0/go-shortener/api/rest/model"
 	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy0/go-shortener/pkg/tracing"
 	"github.com/vstdy0/go-shortener/service/shortener"
+)
+
+const (
+	serviceName = "Shortener server"
 )
 
 // Handler keeps handler dependencies.
@@ -27,9 +35,21 @@ func NewHandler(service shortener.Service, config Config) Handler {
 	return Handler{service: service, config: config}
 }
 
+// Logger returns logger with service field set.
+func (h Handler) Logger(ctx context.Context) (context.Context, zerolog.Logger) {
+	ctx, logger := logging.GetCtxLogger(ctx, logging.WithLogLevel(h.config.LogLevel))
+	logger = logger.With().Str(logging.ServiceKey, serviceName).Logger()
+
+	return ctx, logger
+}
+
 // shortenURL creates shortcut for given url.
 func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	ctx, logger := h.Logger(r.Context())
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Shortening URL")
+	defer tracing.FinishSpan(span, nil)
+
+	userID, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {
 		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
 		return
@@ -46,9 +66,9 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	switch contentType {
 	case "application/json":
-		res, err = h.jsonURLResponse(r.Context(), userID, body)
+		res, err = h.jsonURLResponse(ctx, userID, body)
 	default:
-		res, err = h.plainURLResponse(r.Context(), userID, body)
+		res, err = h.plainURLResponse(ctx, userID, body)
 	}
 	if err != nil {
 		if errors.Is(err, pkg.ErrInvalidInput) {
@@ -57,7 +77,8 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !errors.Is(err, pkg.ErrAlreadyExists) {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.Warn().Err(err).Msg("Shortening URL:")
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
@@ -78,9 +99,13 @@ func (h Handler) shortenURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// shortenBatchURLs creates shortcuts for given urls batch.
-func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+// shortenURLsBatch creates shortcuts for given urls batch.
+func (h Handler) shortenURLsBatch(w http.ResponseWriter, r *http.Request) {
+	ctx, logger := h.Logger(r.Context())
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Shortening URLs batch")
+	defer tracing.FinishSpan(span, nil)
+
+	userID, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {
 		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
 		return
@@ -95,7 +120,7 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 
 	contentType := r.Header.Get("Content-Type")
 
-	res, err := h.urlsBatchResponse(r.Context(), userID, body)
+	res, err := h.urlsBatchResponse(ctx, userID, body)
 	if err != nil {
 		if errors.Is(err, pkg.ErrInvalidInput) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -103,7 +128,8 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !errors.Is(err, pkg.ErrAlreadyExists) {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.Warn().Err(err).Msg("Shortening URLs batch:")
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
@@ -124,22 +150,27 @@ func (h Handler) shortenBatchURLs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// getShortenedURL returns origin url from shortcut.
-func (h Handler) getShortenedURL(w http.ResponseWriter, r *http.Request) {
+// getOriginalURL returns origin url from shortcut.
+func (h Handler) getOriginalURL(w http.ResponseWriter, r *http.Request) {
+	ctx, logger := h.Logger(r.Context())
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Getting original URL")
+	defer tracing.FinishSpan(span, nil)
+
 	urlID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	url, err := h.service.GetURL(r.Context(), urlID)
+	url, err := h.service.GetURL(ctx, urlID)
 	if err != nil {
 		if errors.Is(err, pkg.ErrInvalidInput) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Warn().Err(err).Msg("Getting original URL:")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -154,15 +185,23 @@ func (h Handler) getShortenedURL(w http.ResponseWriter, r *http.Request) {
 
 // getUserURLs returns urls created by current user.
 func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	ctx, logger := h.Logger(r.Context())
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Getting user URLs")
+	defer tracing.FinishSpan(span, nil)
+
+	logger.Info().Msg("Getting user URLs")
+	logger.Debug().Msg("debug msg")
+
+	userID, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {
 		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
 		return
 	}
 
-	urls, err := h.service.GetUserURLs(r.Context(), userID)
+	urls, err := h.service.GetUserURLs(ctx, userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Warn().Err(err).Msg("Getting user URLs:")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -188,7 +227,11 @@ func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
 // deleteUserURLs removes urls created by current user.
 func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	ctx, logger := h.Logger(r.Context())
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Deleting user URLs")
+	defer tracing.FinishSpan(span, nil)
+
+	userID, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {
 		http.Error(w, "context: failed to retrieve user_id", http.StatusInternalServerError)
 		return
@@ -208,14 +251,15 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.RemoveUserURLs(objs)
+	err = h.service.RemoveUserURLs(ctx, objs)
 	if err != nil {
 		if errors.Is(err, pkg.ErrInvalidInput) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Warn().Err(err).Msg("Deleting user URLs:")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -224,7 +268,10 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 
 // ping checks connection to database.
 func (h Handler) ping(w http.ResponseWriter, r *http.Request) {
+	_, logger := h.Logger(r.Context())
+
 	if err := h.service.Ping(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Warn().Err(err).Msg("Ping:")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }

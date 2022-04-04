@@ -24,7 +24,7 @@ func (h queryHook) BeforeQuery(ctx context.Context, event *bun.QueryEvent) conte
 }
 
 func (h queryHook) AfterQuery(ctx context.Context, event *bun.QueryEvent) {
-	logger := h.st.Logger()
+	logger := h.st.Logger(ctx)
 	logger.Debug().
 		Dur(logging.RequestDurKey, time.Since(event.StartTime)).
 		Msg(event.Query)

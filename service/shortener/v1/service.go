@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	serviceName = "shortener"
+	serviceName = "Shortener service"
 )
 
 var _ shortener.Service = (*Service)(nil)
@@ -91,11 +91,12 @@ func (svc *Service) Close() error {
 	return nil
 }
 
-// Logger returns logger with service context.
-func (svc *Service) Logger() zerolog.Logger {
-	logCtx := log.With().Str(logging.ServiceKey, serviceName)
+// Log returns logger with service field set.
+func (svc *Service) Log(ctx context.Context) *zerolog.Logger {
+	_, logger := logging.GetCtxLogger(ctx)
+	logger = logger.With().Str(logging.ServiceKey, serviceName).Logger()
 
-	return logCtx.Logger()
+	return &logger
 }
 
 // delWorker starts url deletion worker.

@@ -90,7 +90,7 @@ func (st Storage) Close() error {
 
 // Migrate performs DB migrations.
 func (st Storage) Migrate(ctx context.Context) error {
-	logger := st.Logger(withOperation("migration"))
+	logger := st.Logger(ctx, withOperation("migration"))
 
 	ms, err := migrations.GetMigrations()
 	if err != nil {

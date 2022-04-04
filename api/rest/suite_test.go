@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"io"
@@ -42,7 +42,7 @@ func (s *TestSuite) SetupSuite() {
 		Timeout: timeout,
 	}
 
-	r := NewRouter(ServiceMock, config, timeout)
+	r := NewRouter(ServiceMock, config)
 	srv := httptest.NewServer(r)
 
 	userID := uuid.MustParse("c92d627d-96f1-416f-9c70-75d7504e161e")

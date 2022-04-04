@@ -36,20 +36,6 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// AddBatchURLs mocks base method.
-func (m *MockService) AddBatchURLs(ctx context.Context, objs *[]model.URL) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddBatchURLs", ctx, objs)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddBatchURLs indicates an expected call of AddBatchURLs.
-func (mr *MockServiceMockRecorder) AddBatchURLs(ctx, objs interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBatchURLs", reflect.TypeOf((*MockService)(nil).AddBatchURLs), ctx, objs)
-}
-
 // AddURL mocks base method.
 func (m *MockService) AddURL(ctx context.Context, obj *model.URL) error {
 	m.ctrl.T.Helper()
@@ -62,6 +48,20 @@ func (m *MockService) AddURL(ctx context.Context, obj *model.URL) error {
 func (mr *MockServiceMockRecorder) AddURL(ctx, obj interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddURL", reflect.TypeOf((*MockService)(nil).AddURL), ctx, obj)
+}
+
+// AddURLsBatch mocks base method.
+func (m *MockService) AddURLsBatch(ctx context.Context, objs *[]model.URL) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddURLsBatch", ctx, objs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddURLsBatch indicates an expected call of AddURLsBatch.
+func (mr *MockServiceMockRecorder) AddURLsBatch(ctx, objs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddURLsBatch", reflect.TypeOf((*MockService)(nil).AddURLsBatch), ctx, objs)
 }
 
 // Close mocks base method.
@@ -123,15 +123,15 @@ func (mr *MockServiceMockRecorder) Ping() *gomock.Call {
 }
 
 // RemoveUserURLs mocks base method.
-func (m *MockService) RemoveUserURLs(objs []model.URL) error {
+func (m *MockService) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveUserURLs", objs)
+	ret := m.ctrl.Call(m, "RemoveUserURLs", ctx, objs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveUserURLs indicates an expected call of RemoveUserURLs.
-func (mr *MockServiceMockRecorder) RemoveUserURLs(objs interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) RemoveUserURLs(ctx, objs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserURLs", reflect.TypeOf((*MockService)(nil).RemoveUserURLs), objs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserURLs", reflect.TypeOf((*MockService)(nil).RemoveUserURLs), ctx, objs)
 }

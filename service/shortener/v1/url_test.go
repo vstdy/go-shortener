@@ -208,7 +208,7 @@ func (s *TestSuite) TestService_AddBatchURLs() {
 		s.Run(tc.name, func() {
 			input := tc.prepareMocks(s.stMock)
 
-			err := s.svc.AddBatchURLs(s.ctx, &input)
+			err := s.svc.AddURLsBatch(s.ctx, &input)
 			if tc.errExpected {
 				s.Assert().Error(err)
 				if tc.errTarget != nil {
@@ -425,7 +425,7 @@ func (s *TestSuite) TestService_RemoveUserURLs() {
 		s.Run(tc.name, func() {
 			input := tc.prepareMocks(s.stMock)
 
-			err := s.svc.RemoveUserURLs(input)
+			err := s.svc.RemoveUserURLs(s.ctx, input)
 			if tc.errExpected {
 				s.Assert().Error(err)
 				if tc.errTarget != nil {

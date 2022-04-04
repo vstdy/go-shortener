@@ -17,8 +17,14 @@ services:
     restart: "always"
     depends_on:
       - postgres
+      - jaeger
     environment:
       - DATABASE_DSN=postgres://user:password@postgres:5432/shortener?sslmode=disable
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
+    networks:
+      - default
+      - jaeger
 
   nginx:
     image: "nginx:1.20.2-alpine"
@@ -29,5 +35,15 @@ services:
     depends_on:
       - shortener
 
+  jaeger:
+    image: "jaegertracing/all-in-one:latest"
+    ports:
+      - "16686:16686"
+    networks:
+      - jaeger
+
 volumes:
   postgres_data:
+
+networks:
+  jaeger:

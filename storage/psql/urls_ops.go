@@ -4,18 +4,23 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/google/uuid"
 
 	"github.com/vstdy0/go-shortener/model"
 	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/pkg/tracing"
 	"github.com/vstdy0/go-shortener/storage/psql/schema"
 )
 
 const tableName = "url"
 
 // HasURL checks existence of the url object with given id
-func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
-	exists, err := st.db.NewSelect().
+func (st *Storage) HasURL(ctx context.Context, id int) (exists bool, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Has URL")
+	defer tracing.FinishSpan(span, err)
+
+	exists, err = st.db.NewSelect().
 		Model(&schema.URL{}).
 		Where("id = ?", id).
 		Exists(ctx)
@@ -24,12 +29,15 @@ func (st *Storage) HasURL(ctx context.Context, id int) (bool, error) {
 }
 
 // AddURLs adds given url objects to storage
-func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, error) {
-	logger := st.Logger(withTable(tableName), withOperation("insert"))
+func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) (retObjs []model.URL, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URLs")
+	defer tracing.FinishSpan(span, err)
+
+	logger := st.Logger(ctx, withTable(tableName), withOperation("insert"))
 
 	dbObjs := schema.NewURLsFromCanonical(objs)
 
-	_, err := st.db.NewInsert().
+	_, err = st.db.NewInsert().
 		Model(&dbObjs).
 		On("CONFLICT (url) WHERE deleted_at IS NULL DO UPDATE").
 		Set("updated_at=NOW()").
@@ -39,27 +47,30 @@ func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) ([]model.URL, 
 		return nil, err
 	}
 
-	addedObjs, err := dbObjs.ToCanonical()
+	retObjs, err = dbObjs.ToCanonical()
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Info().Msgf("Objects added %v", addedObjs)
+	logger.Info().Msgf("Objects added %v", retObjs)
 
 	for _, obj := range dbObjs {
 		if obj.Updated {
-			return addedObjs, pkg.ErrAlreadyExists
+			return retObjs, pkg.ErrAlreadyExists
 		}
 	}
 
-	return addedObjs, nil
+	return retObjs, nil
 }
 
 // GetURL gets url object with given id
-func (st *Storage) GetURL(ctx context.Context, id int) (model.URL, error) {
+func (st *Storage) GetURL(ctx context.Context, id int) (obj model.URL, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Get URL")
+	defer tracing.FinishSpan(span, err)
+
 	dbObj := schema.URL{}
 
-	err := st.db.NewSelect().
+	err = st.db.NewSelect().
 		Model(&dbObj).
 		Where("id = ?", id).
 		Scan(ctx)
@@ -70,16 +81,19 @@ func (st *Storage) GetURL(ctx context.Context, id int) (model.URL, error) {
 		return model.URL{}, err
 	}
 
-	obj := dbObj.ToCanonical()
+	obj = dbObj.ToCanonical()
 
 	return obj, nil
 }
 
 // GetUserURLs gets current user url objects
-func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
+func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) (objs []model.URL, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Get user URLs")
+	defer tracing.FinishSpan(span, err)
+
 	var dbObjs schema.URLS
 
-	err := st.db.NewSelect().
+	err = st.db.NewSelect().
 		Model(&dbObjs).
 		Where("user_id = ?", userID).
 		Scan(ctx)
@@ -90,7 +104,7 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 		return nil, nil
 	}
 
-	objs, err := dbObjs.ToCanonical()
+	objs, err = dbObjs.ToCanonical()
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +113,11 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 }
 
 // RemoveUserURLs removes current user url objects with given ids
-func (st *Storage) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
-	logger := st.Logger(withTable(tableName), withOperation("delete"))
+func (st *Storage) RemoveUserURLs(ctx context.Context, objs []model.URL) (err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Remove user URLs")
+	defer tracing.FinishSpan(span, err)
+
+	logger := st.Logger(ctx, withTable(tableName), withOperation("delete"))
 
 	dbObjs := schema.NewURLsFromCanonical(objs)
 

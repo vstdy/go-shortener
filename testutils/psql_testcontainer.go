@@ -54,7 +54,7 @@ func NewPostgreSQLContainer(ctx context.Context, opts ...PostgreSQLContainerOpti
 	)
 
 	config := PostgreSQLContainerConfig{
-		ImageTag: "11.15",
+		ImageTag: "12.10-alpine",
 		User:     "user",
 		Password: "password",
 		Database: "mockdb",

@@ -1,6 +1,6 @@
 # Shortener
 
-The application is a tool that creates a short, unique URL that will redirect to the specific website of your choosing  
+The application is a tool that creates a short, unique URL that will redirect to the specific website of your choosing.  
 Is a project of the [course](https://practicum.yandex.ru/profile/go-developer/)
 
 ## REST API
@@ -15,7 +15,7 @@ By default, server starts at `8080` HTTP port with the following endpoints:
 - `DELETE /api/user/urls` - remove urls created by current user with given ids;
 - `GET /ping` - check connection to database;
 
-For details check ***requests.http*** file
+For details check out [***requests.http***](./requests.http) file
 
 
 ## Code

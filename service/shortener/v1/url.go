@@ -9,11 +9,15 @@ import (
 
 	"github.com/vstdy0/go-shortener/model"
 	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy0/go-shortener/pkg/tracing"
 	"github.com/vstdy0/go-shortener/service/shortener/v1/validator"
 )
 
 // AddURL adds given object to storage.
-func (svc *Service) AddURL(ctx context.Context, obj *model.URL) error {
+func (svc *Service) AddURL(ctx context.Context, obj *model.URL) (err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URL")
+	defer tracing.FinishSpan(span, err)
+
 	if err := validator.ValidateURL(obj.URL); err != nil {
 		return fmt.Errorf("%w: url: %v", pkg.ErrInvalidInput, err)
 	}
@@ -31,8 +35,11 @@ func (svc *Service) AddURL(ctx context.Context, obj *model.URL) error {
 	return nil
 }
 
-// AddBatchURLs adds given batch of objects to storage.
-func (svc *Service) AddBatchURLs(ctx context.Context, objs *[]model.URL) error {
+// AddURLsBatch adds given batch of objects to storage.
+func (svc *Service) AddURLsBatch(ctx context.Context, objs *[]model.URL) (err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URLs batch")
+	defer tracing.FinishSpan(span, err)
+
 	for _, obj := range *objs {
 		if err := validator.ValidateURL(obj.URL); err != nil {
 			return fmt.Errorf("%w: url: %v", pkg.ErrInvalidInput, err)
@@ -56,7 +63,10 @@ func (svc *Service) AddBatchURLs(ctx context.Context, objs *[]model.URL) error {
 }
 
 // GetURL gets object with given id.
-func (svc *Service) GetURL(ctx context.Context, id int) (string, error) {
+func (svc *Service) GetURL(ctx context.Context, id int) (url string, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Get URL")
+	defer tracing.FinishSpan(span, err)
+
 	if id < 1 {
 		return "", fmt.Errorf("%w: id: less than 1", pkg.ErrInvalidInput)
 	}
@@ -70,17 +80,23 @@ func (svc *Service) GetURL(ctx context.Context, id int) (string, error) {
 }
 
 // GetUserURLs gets current user objects.
-func (svc *Service) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
-	urls, err := svc.storage.GetUserURLs(ctx, userID)
+func (svc *Service) GetUserURLs(ctx context.Context, userID uuid.UUID) (objs []model.URL, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "Get user URLs")
+	defer tracing.FinishSpan(span, err)
+
+	objs, err = svc.storage.GetUserURLs(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return urls, nil
+	return objs, nil
 }
 
 // RemoveUserURLs removes current user objects with given ids.
-func (svc *Service) RemoveUserURLs(objs []model.URL) error {
+func (svc *Service) RemoveUserURLs(ctx context.Context, objs []model.URL) (err error) {
+	_, span := tracing.StartSpanFromCtx(ctx, "Remove user URLs")
+	defer tracing.FinishSpan(span, err)
+
 	if len(objs) == 0 {
 		return fmt.Errorf("%w: ids: empty", pkg.ErrInvalidInput)
 	}
