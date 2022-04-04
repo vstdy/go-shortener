@@ -22,6 +22,11 @@ func (u AddURLRequest) ToCanonical(userID uuid.UUID) model.URL {
 	return obj
 }
 
+// NewURLReqFromStr creates AddURLRequest object from string.
+func NewURLReqFromStr(url string) AddURLRequest {
+	return AddURLRequest{URL: url}
+}
+
 type AddURLResponse struct {
 	Result string `json:"result"`
 }

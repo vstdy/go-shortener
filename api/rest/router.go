@@ -1,8 +1,6 @@
-package api
+package rest
 
 import (
-	"time"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
@@ -10,7 +8,7 @@ import (
 )
 
 // NewRouter returns router.
-func NewRouter(svc shortener.Service, config Config, timeout time.Duration) chi.Router {
+func NewRouter(svc shortener.Service, config Config) chi.Router {
 	h := NewHandler(svc, config)
 	r := chi.NewRouter()
 
@@ -19,21 +17,21 @@ func NewRouter(svc shortener.Service, config Config, timeout time.Duration) chi.
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Timeout(timeout))
+	r.Use(middleware.Timeout(config.Timeout))
 	r.Use(gzipDecompressRequest)
 	r.Use(gzipCompressResponse)
 	r.Use(cookieAuth(config.SecretKey))
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.shortenURL)
-		r.Get("/{id}", h.getShortenedURL)
+		r.Get("/{id}", h.getOriginalURL)
 		r.Get("/ping", h.ping)
 
 		r.Route("/api", func(r chi.Router) {
 			r.Use(middleware.AllowContentType("application/json"))
 
 			r.Post("/shorten", h.shortenURL)
-			r.Post("/shorten/batch", h.shortenBatchURLs)
+			r.Post("/shorten/batch", h.shortenURLsBatch)
 			r.Get("/user/urls", h.getUserURLs)
 			r.Delete("/user/urls", h.deleteUserURLs)
 		})

@@ -1,11 +1,12 @@
 package common
 
 import (
-	"context"
 	"fmt"
 	"time"
 
-	"github.com/vstdy0/go-shortener/api"
+	"github.com/rs/zerolog"
+
+	"github.com/vstdy0/go-shortener/api/rest"
 	"github.com/vstdy0/go-shortener/pkg"
 	"github.com/vstdy0/go-shortener/service/shortener/v1"
 	"github.com/vstdy0/go-shortener/storage"
@@ -16,9 +17,10 @@ import (
 
 // Config combines sub-configs for all services, storages and providers.
 type Config struct {
-	Timeout     time.Duration
+	Timeout     time.Duration    `mapstructure:"-"`
+	LogLevel    zerolog.Level    `mapstructure:"-"`
 	StorageType string           `mapstructure:"storage_type"`
-	Server      api.Config       `mapstructure:"server,squash"`
+	Server      rest.Config      `mapstructure:"server,squash"`
 	URLService  shortener.Config `mapstructure:"url_service,squash"`
 	FileStorage file.Config      `mapstructure:"file_storage,squash"`
 	PSQLStorage psql.Config      `mapstructure:"psql_storage,squash"`
@@ -34,8 +36,9 @@ const (
 func BuildDefaultConfig() Config {
 	return Config{
 		Timeout:     5 * time.Second,
+		LogLevel:    zerolog.InfoLevel,
 		StorageType: psqlStorage,
-		Server:      api.NewDefaultConfig(),
+		Server:      rest.NewDefaultConfig(),
 		URLService:  shortener.NewDefaultConfig(),
 		FileStorage: file.NewDefaultConfig(),
 		PSQLStorage: psql.NewDefaultConfig(),
@@ -71,13 +74,6 @@ func (config Config) BuildPsqlStorage() (*psql.Storage, error) {
 	)
 	if err != nil {
 		return nil, fmt.Errorf("building psql storage: %w", err)
-	}
-
-	ctx, ctxCancel := context.WithTimeout(context.Background(), config.Timeout)
-	defer ctxCancel()
-
-	if err = st.Migrate(ctx); err != nil {
-		return nil, err
 	}
 
 	return st, nil

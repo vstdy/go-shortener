@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	api "github.com/vstdy0/go-shortener/api/model"
+	rest "github.com/vstdy0/go-shortener/api/rest/model"
 	"github.com/vstdy0/go-shortener/model"
 	"github.com/vstdy0/go-shortener/pkg"
 	serviceMock "github.com/vstdy0/go-shortener/service/shortener/mock"
@@ -157,7 +157,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 				prepareBody: func(obj model.URL) string {
 					obj.ID = 1
 
-					urlResp := api.NewURLRespFromCanon(obj, s.config.BaseURL)
+					urlResp := rest.NewURLRespFromCanon(obj, s.config.BaseURL)
 
 					resp, err := json.Marshal(urlResp)
 					s.Assert().NoError(err)
@@ -222,7 +222,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 				}
 
 				ServiceMock.EXPECT().
-					AddBatchURLs(gomock.Any(), &input).
+					AddURLsBatch(gomock.Any(), &input).
 					Return(pkg.ErrInvalidInput)
 
 				return nil
@@ -269,7 +269,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 				}
 
 				ServiceMock.EXPECT().
-					AddBatchURLs(gomock.Any(), &input).
+					AddURLsBatch(gomock.Any(), &input).
 					Do(func(ctx context.Context, objs *[]model.URL) {
 						for idx := range *objs {
 							(*objs)[idx].ID = idx + 1
@@ -303,7 +303,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 						objs[idx].ID = idx + 1
 					}
 
-					batchRes := api.NewURLsBatchRespFromCanon(objs, s.config.BaseURL)
+					batchRes := rest.NewURLsBatchRespFromCanon(objs, s.config.BaseURL)
 
 					res, err := json.Marshal(batchRes)
 					s.Assert().NoError(err)
@@ -330,7 +330,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 				}
 
 				ServiceMock.EXPECT().
-					AddBatchURLs(gomock.Any(), &input).
+					AddURLsBatch(gomock.Any(), &input).
 					Do(func(ctx context.Context, objs *[]model.URL) {
 						for idx := range *objs {
 							(*objs)[idx].ID = idx + 1
@@ -364,7 +364,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 						objs[idx].ID = idx + 1
 					}
 
-					batchRes := api.NewURLsBatchRespFromCanon(objs, s.config.BaseURL)
+					batchRes := rest.NewURLsBatchRespFromCanon(objs, s.config.BaseURL)
 
 					res, err := json.Marshal(batchRes)
 					s.Assert().NoError(err)
@@ -548,7 +548,7 @@ func (s *TestSuite) TestServer_getUserURLs() {
 			expected: expected{
 				code: http.StatusOK,
 				prepareBody: func(objs []model.URL) string {
-					userURLs := api.NewUserURLsFromCanon(objs, s.config.BaseURL)
+					userURLs := rest.NewUserURLsFromCanon(objs, s.config.BaseURL)
 
 					res, err := json.Marshal(userURLs)
 					s.Assert().NoError(err)
@@ -600,7 +600,7 @@ func (s *TestSuite) TestServer_deleteUserURLs() {
 			name: "Fail: invalid input",
 			prepareMocks: func(ServiceMock *serviceMock.MockService) {
 				ServiceMock.EXPECT().
-					RemoveUserURLs(nil).
+					RemoveUserURLs(gomock.Any(), nil).
 					Return(pkg.ErrInvalidInput)
 			},
 			request: request{
@@ -630,7 +630,7 @@ func (s *TestSuite) TestServer_deleteUserURLs() {
 				}
 
 				ServiceMock.EXPECT().
-					RemoveUserURLs(input).
+					RemoveUserURLs(gomock.Any(), input).
 					Return(nil)
 			},
 			request: request{

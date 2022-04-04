@@ -6,21 +6,21 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vstdy0/go-shortener/api"
+	"github.com/vstdy0/go-shortener/api/rest"
 	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
+	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy0/go-shortener/pkg/tracing"
 )
 
 const (
 	flagConfigPath      = "config"
-	flagLogLevel        = "log-level"
+	flagLogLevel        = "log_level"
 	flagTimeout         = "timeout"
 	flagServerAddress   = "server_address"
 	flagBaseURL         = "base_url"
@@ -39,10 +39,6 @@ func Execute() error {
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := setupLogger(cmd); err != nil {
-				return fmt.Errorf("app initialization: %w", err)
-			}
-
 			if err := setupConfig(cmd); err != nil {
 				return fmt.Errorf("app initialization: %w", err)
 			}
@@ -52,25 +48,32 @@ func newRootCmd() *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := common.GetConfigFromCmdCtx(cmd)
+			logger := logging.NewLogger(logging.WithLogLevel(config.LogLevel))
+
+			tracerCloser, err := tracing.SetupGlobalJaegerTracer()
+			if err != nil {
+				return fmt.Errorf("app initialization: tracer setting: %w", err)
+			}
+			defer tracerCloser.Close()
 
 			svc, err := config.BuildService()
 			if err != nil {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
 
-			srv, err := api.NewServer(svc, config.Server, config.Timeout)
+			srv, err := rest.NewServer(svc, config.Server)
 			if err != nil {
 				return fmt.Errorf("app initialization: server building: %w", err)
 			}
 
 			go func() {
 				if err = srv.ListenAndServe(); err != http.ErrServerClosed {
-					log.Error().Err(err).Msg("HTTP server ListenAndServe")
+					logger.Error().Err(err).Msg("HTTP server ListenAndServe")
 				}
 			}()
 
 			stop := make(chan os.Signal, 1)
-			signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+			signal.Notify(stop, os.Interrupt)
 			<-stop
 
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -82,7 +85,7 @@ func newRootCmd() *cobra.Command {
 			if err = svc.Close(); err != nil {
 				return fmt.Errorf("service shutdown failed: %w", err)
 			}
-			log.Info().Msg("server stopped")
+			logger.Info().Msg("server stopped")
 
 			return nil
 		},
@@ -90,7 +93,7 @@ func newRootCmd() *cobra.Command {
 
 	config := common.BuildDefaultConfig()
 	cmd.PersistentFlags().String(flagConfigPath, "./config.toml", "Config file path")
-	cmd.PersistentFlags().String(flagLogLevel, "info", "Logger level [debug,info,warn,error,fatal]")
+	cmd.PersistentFlags().StringP(flagLogLevel, "l", config.LogLevel.String(), "Logger level [debug,info,warn,error,fatal]")
 	cmd.PersistentFlags().Duration(flagTimeout, config.Timeout, "Request timeout")
 	cmd.PersistentFlags().StringP(flagDatabaseDSN, "d", config.PSQLStorage.DSN, "Database source name")
 	cmd.Flags().StringP(flagServerAddress, "a", config.Server.ServerAddress, "Server address")
@@ -101,26 +104,6 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(newMigrateCmd())
 
 	return cmd
-}
-
-// setupLogger configures global logger.
-func setupLogger(cmd *cobra.Command) error {
-	logLevelBz, err := cmd.Flags().GetString(flagLogLevel)
-	if err != nil {
-		return fmt.Errorf("%s flag reading: %w", flagLogLevel, err)
-	}
-	logLevel, err := zerolog.ParseLevel(logLevelBz)
-	if err != nil {
-		return fmt.Errorf("%s flag parsing: %w", flagLogLevel, err)
-	}
-
-	logWriter := zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.RFC3339,
-	}
-	log.Logger = log.Output(logWriter).Level(logLevel)
-
-	return nil
 }
 
 // setupConfig reads app config and stores it to cobra.Command context.
@@ -153,6 +136,15 @@ func setupConfig(cmd *cobra.Command) error {
 	}
 
 	config.Timeout = viper.GetDuration(flagTimeout)
+	config.Server.Timeout = config.Timeout
+
+	logLevel, err := zerolog.ParseLevel(viper.GetString(flagLogLevel))
+	if err != nil {
+		return fmt.Errorf("%s flag parsing: %w", flagLogLevel, err)
+	}
+	config.LogLevel = logLevel
+	config.Server.LogLevel = config.LogLevel
+
 	common.SetConfigToCmdCtx(cmd, config)
 
 	return nil

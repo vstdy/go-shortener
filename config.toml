@@ -5,7 +5,7 @@
 database_dsn = "postgres://user:password@localhost:5432/shortener?sslmode=disable"
 
 # Log level
-log-level = "info"
+log_level = "info"
 
 # Request timeout
 timeout = "5s"
@@ -28,7 +28,9 @@ storage_type = "psql"
 # Delition worker configs
 # Request timeout
 del_req_timeout = "5s"
+
 # Buffer cleanse timeout
 del_buf_wipe_timeout = "10s"
+
 # Buffer capacity
 del_buf_cap = 10

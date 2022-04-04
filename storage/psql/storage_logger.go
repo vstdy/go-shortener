@@ -1,8 +1,9 @@
 package psql
 
 import (
+	"context"
+
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/vstdy0/go-shortener/pkg/logging"
 )
@@ -25,8 +26,9 @@ func withOperation(opID string) loggerOption {
 }
 
 // Logger returns logger with service context.
-func (st Storage) Logger(opts ...loggerOption) zerolog.Logger {
-	logCtx := log.With().Str(logging.ServiceKey, serviceName)
+func (st *Storage) Logger(ctx context.Context, opts ...loggerOption) zerolog.Logger {
+	_, logger := logging.GetCtxLogger(ctx)
+	logCtx := logger.With().Str(logging.ServiceKey, serviceName)
 	for _, opt := range opts {
 		logCtx = opt(logCtx)
 	}
