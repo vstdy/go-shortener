@@ -68,7 +68,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 			prepareMocks: func(ServiceMock *serviceMock.MockService) model.URL {
 				input := model.URL{
 					UserID: s.userID,
-					URL:    "https://extremely-lengthy-url.com/",
+					URL:    "https://lengthy-url.com/",
 				}
 
 				ServiceMock.EXPECT().
@@ -83,7 +83,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 			request: request{
 				method:      http.MethodPost,
 				path:        "/",
-				body:        "https://extremely-lengthy-url.com/",
+				body:        "https://lengthy-url.com/",
 				contentType: "text/plain; charset=utf-8",
 			},
 			expected: expected{
@@ -101,7 +101,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 			prepareMocks: func(ServiceMock *serviceMock.MockService) model.URL {
 				input := model.URL{
 					UserID: s.userID,
-					URL:    "https://extremely-lengthy-url.com/",
+					URL:    "https://lengthy-url.com/",
 				}
 
 				ServiceMock.EXPECT().
@@ -116,7 +116,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 			request: request{
 				method:      http.MethodPost,
 				path:        "/",
-				body:        "https://extremely-lengthy-url.com/",
+				body:        "https://lengthy-url.com/",
 				contentType: "text/plain; charset=utf-8",
 			},
 			expected: expected{
@@ -134,7 +134,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 			prepareMocks: func(ServiceMock *serviceMock.MockService) model.URL {
 				input := model.URL{
 					UserID: s.userID,
-					URL:    "https://extremely-lengthy-url.com/",
+					URL:    "https://lengthy-url.com/",
 				}
 
 				ServiceMock.EXPECT().
@@ -149,7 +149,7 @@ func (s *TestSuite) TestServer_shortenURL() {
 			request: request{
 				method:      http.MethodPost,
 				path:        "/api/shorten",
-				body:        `{"url": "https://extremely-lengthy-url.com/"}`,
+				body:        `{"url": "https://lengthy-url.com/"}`,
 				contentType: "application/json",
 			},
 			expected: expected{
@@ -212,7 +212,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 					{
 						UserID:        s.userID,
 						CorrelationID: "",
-						URL:           "https://extremely-lengthy-url.com/",
+						URL:           "https://lengthy-url.com/",
 					},
 					{
 						UserID:        s.userID,
@@ -234,7 +234,7 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 					[
 					  {
 						"correlation_id":"",
-						"original_url":"https://extremely-lengthy-url.com/"
+						"original_url":"https://lengthy-url.com/"
 					  },
 					  {
 						"correlation_id":"6c9fa3c4-469c-4541-a636-66b7f8b5cbe2",
@@ -259,12 +259,12 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 					{
 						UserID:        s.userID,
 						CorrelationID: "056d98a6-f001-4526-b5d9-071900d57363",
-						URL:           "https://extremely-lengthy-url-1.com/",
+						URL:           "https://lengthy-url-1.com/",
 					},
 					{
 						UserID:        s.userID,
 						CorrelationID: "6c9fa3c4-469c-4541-a636-66b7f8b5cbe2",
-						URL:           "https://extremely-lengthy-url-2.com/",
+						URL:           "https://lengthy-url-2.com/",
 					},
 				}
 
@@ -286,11 +286,11 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 					[
 					  {
 						"correlation_id":"056d98a6-f001-4526-b5d9-071900d57363",
-						"original_url":"https://extremely-lengthy-url-1.com/"
+						"original_url":"https://lengthy-url-1.com/"
 					  },
 					  {
 						"correlation_id":"6c9fa3c4-469c-4541-a636-66b7f8b5cbe2",
-						"original_url":"https://extremely-lengthy-url-2.com/"
+						"original_url":"https://lengthy-url-2.com/"
 					  }
 					]
 				`,
@@ -320,12 +320,12 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 					{
 						UserID:        s.userID,
 						CorrelationID: "056d98a6-f001-4526-b5d9-071900d57363",
-						URL:           "https://extremely-lengthy-url-1.com/",
+						URL:           "https://lengthy-url-1.com/",
 					},
 					{
 						UserID:        s.userID,
 						CorrelationID: "6c9fa3c4-469c-4541-a636-66b7f8b5cbe2",
-						URL:           "https://extremely-lengthy-url-2.com/",
+						URL:           "https://lengthy-url-2.com/",
 					},
 				}
 
@@ -347,11 +347,11 @@ func (s *TestSuite) TestServer_shortenBatchURLs() {
 					[
 					  {
 						"correlation_id":"056d98a6-f001-4526-b5d9-071900d57363",
-						"original_url":"https://extremely-lengthy-url-1.com/"
+						"original_url":"https://lengthy-url-1.com/"
 					  },
 					  {
 						"correlation_id":"6c9fa3c4-469c-4541-a636-66b7f8b5cbe2",
-						"original_url":"https://extremely-lengthy-url-2.com/"
+						"original_url":"https://lengthy-url-2.com/"
 					  }
 					]
 				`,
@@ -452,7 +452,7 @@ func (s *TestSuite) TestServer_getShortenedURL() {
 
 				ServiceMock.EXPECT().
 					GetURL(gomock.Any(), input).
-					Return("https://extremely-lengthy-url.com/", nil)
+					Return("https://lengthy-url.com/", nil)
 			},
 			request: request{
 				method: http.MethodGet,
@@ -460,7 +460,7 @@ func (s *TestSuite) TestServer_getShortenedURL() {
 			},
 			expected: expected{
 				code:     http.StatusTemporaryRedirect,
-				location: "https://extremely-lengthy-url.com/",
+				location: "https://lengthy-url.com/",
 			},
 		},
 	}
@@ -526,12 +526,12 @@ func (s *TestSuite) TestServer_getUserURLs() {
 					{
 						ID:     1,
 						UserID: s.userID,
-						URL:    "https://extremely-lengthy-url-1.com/",
+						URL:    "https://lengthy-url-1.com/",
 					},
 					{
 						ID:     2,
 						UserID: s.userID,
-						URL:    "https://extremely-lengthy-url-2.com/",
+						URL:    "https://lengthy-url-2.com/",
 					},
 				}
 

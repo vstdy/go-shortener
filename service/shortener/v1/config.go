@@ -33,7 +33,7 @@ func (config Config) Validate() error {
 func NewDefaultConfig() Config {
 	return Config{
 		DelReqTimeout:     5 * time.Second,
-		DelBufWipeTimeout: 10 * time.Second,
+		DelBufWipeTimeout: 5 * time.Second,
 		DelBufCap:         10,
 	}
 }

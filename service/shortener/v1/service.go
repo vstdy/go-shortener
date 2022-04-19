@@ -53,8 +53,8 @@ func WithStorage(st inter.Storage) ServiceOption {
 	}
 }
 
-// New creates a new shortener service.
-func New(opts ...ServiceOption) (*Service, error) {
+// NewService creates a new shortener service.
+func NewService(opts ...ServiceOption) (*Service, error) {
 	svc := &Service{
 		config: NewDefaultConfig(),
 	}

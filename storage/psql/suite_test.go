@@ -31,7 +31,7 @@ func (s *TestSuite) SetupSuite() {
 	stCfg := NewDefaultConfig()
 	stCfg.DSN = c.GetDSN()
 
-	st, err := New(WithConfig(stCfg))
+	st, err := NewStorage(WithConfig(stCfg))
 	s.Require().NoError(err)
 
 	s.Require().NoError(st.Migrate(ctx))
@@ -54,8 +54,5 @@ func (s *TestSuite) TearDownSuite() {
 }
 
 func TestSuite_PSQLStorage(t *testing.T) {
-	// for ci tests
-	t.Skip("skipping test.")
-
 	suite.Run(t, new(TestSuite))
 }

@@ -15,7 +15,7 @@ By default, server starts at `8080` HTTP port with the following endpoints:
 - `DELETE /api/user/urls` - remove urls created by current user with given ids;
 - `GET /ping` - check connection to database;
 
-For details check out [***requests.http***](./requests.http) file
+For details check out [***http-client.http***](./http-client.http) file
 
 
 ## Code
@@ -25,20 +25,22 @@ App architecture and configuration:
 
 - [viper](https://github.com/spf13/viper) - app configuration;
 - [cobra](https://github.com/spf13/cobra) - CLI;
-- [zerolog](github.com/rs/zerolog) - logger;
+- [zerolog](https://github.com/rs/zerolog) - logger;
+- [jaeger-client-go](https://github.com/jaegertracing/jaeger-client-go) - tracer;
 
 Networking:
 
-- [go-chi](github.com/go-chi/chi) - HTTP router;
+- [go-chi](https://github.com/go-chi/chi) - HTTP router;
+- [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) - gRPC to JSON proxy generator;
 
 SQL database interface provider:
 
-- [bun](github.com/uptrace/bun) - database client;
+- [bun](https://github.com/uptrace/bun) - database client;
 
 Testing:
 
-- [testify](github.com/stretchr/testify) - tests build toolkit;
-- [testcontainers-go](github.com/testcontainers/testcontainers-go) - library to create runtime environment for tests;
+- [testify](https://github.com/stretchr/testify) - tests build toolkit;
+- [testcontainers-go](https://github.com/testcontainers/testcontainers-go) - library to create runtime environment for tests;
 
 ## CLI
 
@@ -54,11 +56,49 @@ Root only command flags:
 - `-s --storage_type`: (optional) set logging level (default: `psql`);
 - `-f --file_storage_path`: (optional) set logging level (default: `./storage/file/storage_file.txt`);
 
+If config file not specified, defaults are used. Defaults can be overwritten using ENV variables.
+
 ### Migrations
 
     shortener migrate --config ./my-confs/config-1.toml
 
-If config file not specified, defaults are used. Defaults can be overwritten using ENV variables.
+Command migrates DB to the latest version
+
+### gRPC client
+1. Shorten given url.
+   ```
+   shortener client shorten https://lengthy-url.com/
+   ```
+   Arguments:
+   - `args[0]`: url to shorten;
+
+1. Shorten given urls batch.
+    ```
+    shortener client shorten batch https://lengthy-url-1.com/ https://lengthy-url-2.com/
+    ```
+   Arguments:
+   - `args[0] args[1]...`: urls to shorten
+
+1. Return original url from shortened url.
+    ```
+    shortener client get original_url http://127.0.0.1:8080/gw/1
+    ```
+   Arguments:
+   - `args[0]`: shortened url;
+
+1. Return user's urls.
+    ```
+    shortener client get users_urls
+    ```
+1. Delete user's urls.
+    ```
+    shortener client delete 1 3
+    ```
+   Arguments:
+   - `args[0] args[1]...`: urls ids to delete
+
+Flags:
+- `-t --token`: (optional) user's token;
 
 ## How to run
 ### Docker

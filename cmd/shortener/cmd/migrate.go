@@ -9,7 +9,7 @@ import (
 	"github.com/vstdy0/go-shortener/pkg/logging"
 )
 
-// newMigrateCmd creates a new migrate cmd.
+// newMigrateCmd creates a new migrate command.
 func newMigrateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate",

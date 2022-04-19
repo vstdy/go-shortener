@@ -18,8 +18,8 @@ type Storage struct {
 	urls map[int]schema.URL
 }
 
-// New creates a new memory Storage.
-func New() (*Storage, error) {
+// NewStorage creates a new memory Storage.
+func NewStorage() (*Storage, error) {
 	var st Storage
 	st.urls = make(map[int]schema.URL)
 	st.id = 1

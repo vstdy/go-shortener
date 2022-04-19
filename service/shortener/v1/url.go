@@ -18,7 +18,7 @@ func (svc *Service) AddURL(ctx context.Context, obj *model.URL) (err error) {
 	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URL")
 	defer tracing.FinishSpan(span, err)
 
-	if err := validator.ValidateURL(obj.URL); err != nil {
+	if err = validator.ValidateURL(obj.URL); err != nil {
 		return fmt.Errorf("%w: url: %v", pkg.ErrInvalidInput, err)
 	}
 
@@ -40,8 +40,12 @@ func (svc *Service) AddURLsBatch(ctx context.Context, objs *[]model.URL) (err er
 	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URLs batch")
 	defer tracing.FinishSpan(span, err)
 
+	if *objs == nil {
+		return pkg.ErrInvalidInput
+	}
+
 	for _, obj := range *objs {
-		if err := validator.ValidateURL(obj.URL); err != nil {
+		if err = validator.ValidateURL(obj.URL); err != nil {
 			return fmt.Errorf("%w: url: %v", pkg.ErrInvalidInput, err)
 		}
 		if obj.CorrelationID == "" {

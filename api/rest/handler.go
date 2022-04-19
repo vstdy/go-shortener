@@ -183,14 +183,11 @@ func (h Handler) getOriginalURL(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-// getUserURLs returns urls created by current user.
-func (h Handler) getUserURLs(w http.ResponseWriter, r *http.Request) {
+// getUsersURLs returns urls created by current user.
+func (h Handler) getUsersURLs(w http.ResponseWriter, r *http.Request) {
 	ctx, logger := h.Logger(r.Context())
 	ctx, span := tracing.StartSpanFromCtx(ctx, "Getting user URLs")
 	defer tracing.FinishSpan(span, nil)
-
-	logger.Info().Msg("Getting user URLs")
-	logger.Debug().Msg("debug msg")
 
 	userID, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {

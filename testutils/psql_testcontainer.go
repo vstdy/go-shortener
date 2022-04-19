@@ -81,7 +81,7 @@ func NewPostgreSQLContainer(ctx context.Context, opts ...PostgreSQLContainerOpti
 				nat.Port(containerPort),
 				"postgres",
 				func(port nat.Port) string {
-					return fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", config.User, config.Password, port.Port(), config.Database)
+					return fmt.Sprintf("postgres://%s:%s@127.0.0.1:%s/%s?sslmode=disable", config.User, config.Password, port.Port(), config.Database)
 				}).
 				Timeout(5 * time.Second),
 		},

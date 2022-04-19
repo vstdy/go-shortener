@@ -45,8 +45,8 @@ func WithConfig(config Config) StorageOption {
 	}
 }
 
-// New creates a new psql Storage with custom options.
-func New(opts ...StorageOption) (*Storage, error) {
+// NewStorage creates a new psql Storage with custom options.
+func NewStorage(opts ...StorageOption) (*Storage, error) {
 	st := &Storage{
 		config: NewDefaultConfig(),
 	}

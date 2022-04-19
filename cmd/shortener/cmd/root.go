@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/vstdy0/go-shortener/api/grpc"
 	"github.com/vstdy0/go-shortener/api/rest"
 	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
 	"github.com/vstdy0/go-shortener/pkg/logging"
@@ -56,19 +58,40 @@ func newRootCmd() *cobra.Command {
 			}
 			defer tracerCloser.Close()
 
+			// Build servers
 			svc, err := config.BuildService()
 			if err != nil {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
 
-			srv, err := rest.NewServer(svc, config.Server)
+			srv, err := rest.NewServer(svc, config.HTTPServer)
 			if err != nil {
 				return fmt.Errorf("app initialization: server building: %w", err)
 			}
 
+			grpcSrv, err := grpc.NewServer(
+				grpc.WithConfig(config.GRPCServer),
+				grpc.WithService(svc),
+			)
+			if err != nil {
+				return fmt.Errorf("app initialization: gRPC server building: %w", err)
+			}
+
+			grpcSrvListener, err := net.Listen("tcp", config.GRPCServer.ServerAddress)
+			if err != nil {
+				return fmt.Errorf("app initialization: gRPC server listener init: %w", err)
+			}
+
+			// Run servers
 			go func() {
 				if err = srv.ListenAndServe(); err != http.ErrServerClosed {
 					logger.Error().Err(err).Msg("HTTP server ListenAndServe")
+				}
+			}()
+
+			go func() {
+				if err = grpcSrv.Serve(grpcSrvListener); err != http.ErrServerClosed {
+					logger.Error().Err(err).Msg("gRPC server Serve")
 				}
 			}()
 
@@ -76,12 +99,15 @@ func newRootCmd() *cobra.Command {
 			signal.Notify(stop, os.Interrupt)
 			<-stop
 
+			// Stop servers
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer shutdownCancel()
-
 			if err = srv.Shutdown(shutdownCtx); err != nil {
 				return fmt.Errorf("server shutdown failed: %w", err)
 			}
+
+			grpcSrv.GracefulStop()
+
 			if err = svc.Close(); err != nil {
 				return fmt.Errorf("service shutdown failed: %w", err)
 			}
@@ -96,12 +122,13 @@ func newRootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringP(flagLogLevel, "l", config.LogLevel.String(), "Logger level [debug,info,warn,error,fatal]")
 	cmd.PersistentFlags().Duration(flagTimeout, config.Timeout, "Request timeout")
 	cmd.PersistentFlags().StringP(flagDatabaseDSN, "d", config.PSQLStorage.DSN, "Database source name")
-	cmd.Flags().StringP(flagServerAddress, "a", config.Server.ServerAddress, "Server address")
-	cmd.Flags().StringP(flagBaseURL, "b", config.Server.BaseURL, "Base URL")
+	cmd.Flags().StringP(flagServerAddress, "a", config.HTTPServer.ServerAddress, "Server address")
+	cmd.Flags().StringP(flagBaseURL, "b", config.HTTPServer.BaseURL, "Base URL")
 	cmd.Flags().StringP(flagStorageType, "s", config.StorageType, "Storage type [memory, file, psql]")
 	cmd.Flags().StringP(flagFileStoragePath, "f", config.FileStorage.FileStoragePath, "File storage path")
 
 	cmd.AddCommand(newMigrateCmd())
+	cmd.AddCommand(newClientCmd())
 
 	return cmd
 }
@@ -135,15 +162,13 @@ func setupConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("config unmarshal: %w", err)
 	}
 
-	config.Timeout = viper.GetDuration(flagTimeout)
-	config.Server.Timeout = config.Timeout
-
 	logLevel, err := zerolog.ParseLevel(viper.GetString(flagLogLevel))
 	if err != nil {
 		return fmt.Errorf("%s flag parsing: %w", flagLogLevel, err)
 	}
 	config.LogLevel = logLevel
-	config.Server.LogLevel = config.LogLevel
+	config.HTTPServer.LogLevel = logLevel
+	config.GRPCServer.LogLevel = logLevel
 
 	common.SetConfigToCmdCtx(cmd, config)
 

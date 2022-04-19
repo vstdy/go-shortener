@@ -1,0 +1,18 @@
+version: v1
+plugins:
+  - name: go
+    out: .
+
+  - name: go-grpc
+    out: .
+
+  - name: grpc-gateway
+    opt:
+      - allow_delete_body=true
+      - logtostderr=true
+    out: .
+
+  - name: validate
+    opt:
+      - lang=go
+    out: .

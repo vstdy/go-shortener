@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/vstdy0/go-shortener/api/grpc"
 	"github.com/vstdy0/go-shortener/api/rest"
 	"github.com/vstdy0/go-shortener/pkg"
 	"github.com/vstdy0/go-shortener/service/shortener/v1"
@@ -17,11 +18,12 @@ import (
 
 // Config combines sub-configs for all services, storages and providers.
 type Config struct {
-	Timeout     time.Duration    `mapstructure:"-"`
+	Timeout     time.Duration    `mapstructure:"timeout"`
 	LogLevel    zerolog.Level    `mapstructure:"-"`
 	StorageType string           `mapstructure:"storage_type"`
-	Server      rest.Config      `mapstructure:"server,squash"`
-	URLService  shortener.Config `mapstructure:"url_service,squash"`
+	HTTPServer  rest.Config      `mapstructure:"server,squash"`
+	GRPCServer  grpc.Config      `mapstructure:"grpc_server,squash"`
+	Service     shortener.Config `mapstructure:"service,squash"`
 	FileStorage file.Config      `mapstructure:"file_storage,squash"`
 	PSQLStorage psql.Config      `mapstructure:"psql_storage,squash"`
 }
@@ -38,8 +40,9 @@ func BuildDefaultConfig() Config {
 		Timeout:     5 * time.Second,
 		LogLevel:    zerolog.InfoLevel,
 		StorageType: psqlStorage,
-		Server:      rest.NewDefaultConfig(),
-		URLService:  shortener.NewDefaultConfig(),
+		HTTPServer:  rest.NewDefaultConfig(),
+		GRPCServer:  grpc.NewDefaultConfig(),
+		Service:     shortener.NewDefaultConfig(),
 		FileStorage: file.NewDefaultConfig(),
 		PSQLStorage: psql.NewDefaultConfig(),
 	}
@@ -47,7 +50,7 @@ func BuildDefaultConfig() Config {
 
 // BuildMemoryStorage builds memory.Storage dependency.
 func (config Config) BuildMemoryStorage() (*memory.Storage, error) {
-	st, err := memory.New()
+	st, err := memory.NewStorage()
 	if err != nil {
 		return nil, fmt.Errorf("building memory storage: %w", err)
 	}
@@ -57,7 +60,7 @@ func (config Config) BuildMemoryStorage() (*memory.Storage, error) {
 
 // BuildFileStorage builds file.Storage dependency.
 func (config Config) BuildFileStorage() (*file.Storage, error) {
-	st, err := file.New(
+	st, err := file.NewStorage(
 		file.WithConfig(config.FileStorage),
 	)
 	if err != nil {
@@ -69,7 +72,7 @@ func (config Config) BuildFileStorage() (*file.Storage, error) {
 
 // BuildPsqlStorage builds psql.Storage dependency.
 func (config Config) BuildPsqlStorage() (*psql.Storage, error) {
-	st, err := psql.New(
+	st, err := psql.NewStorage(
 		psql.WithConfig(config.PSQLStorage),
 	)
 	if err != nil {
@@ -98,8 +101,8 @@ func (config Config) BuildService() (*shortener.Service, error) {
 		return nil, err
 	}
 
-	svc, err := shortener.New(
-		shortener.WithConfig(config.URLService),
+	svc, err := shortener.NewService(
+		shortener.WithConfig(config.Service),
 		shortener.WithStorage(st),
 	)
 	if err != nil {

@@ -51,7 +51,7 @@ func (s *TestSuite) TestService_AddURL() {
 			prepareMocks: func(StorageMock *storageMock.MockStorage) model.URL {
 				input := model.URL{
 					UserID: uuid.New(),
-					URL:    "https://extremely-lengthy-url.com/",
+					URL:    "https://lengthy-url.com/",
 				}
 
 				urls := []model.URL{
@@ -115,7 +115,7 @@ func (s *TestSuite) TestService_AddBatchURLs() {
 					{
 						CorrelationID: "",
 						UserID:        uuid.New(),
-						URL:           "https://extremely-lengthy-url.com/",
+						URL:           "https://lengthy-url.com/",
 					},
 				}
 			},
@@ -175,7 +175,7 @@ func (s *TestSuite) TestService_AddBatchURLs() {
 					{
 						CorrelationID: uuid.NewString(),
 						UserID:        uuid.New(),
-						URL:           "https://extremely-lengthy-url.com/",
+						URL:           "https://lengthy-url.com/",
 					},
 				}
 
@@ -261,7 +261,7 @@ func (s *TestSuite) TestService_GetURL() {
 				url := model.URL{
 					ID:     1,
 					UserID: uuid.New(),
-					URL:    "https://extremely-lengthy-url.com/",
+					URL:    "https://lengthy-url.com/",
 				}
 
 				StorageMock.EXPECT().
@@ -295,7 +295,7 @@ func (s *TestSuite) TestService_GetURL() {
 	}
 }
 
-func (s *TestSuite) TestService_GetUserURL() {
+func (s *TestSuite) TestService_GetUsersURLs() {
 	type testCase struct {
 		name         string
 		prepareMocks func(StorageMock *storageMock.MockStorage) uuid.UUID
@@ -314,7 +314,7 @@ func (s *TestSuite) TestService_GetUserURL() {
 					{
 						ID:     1,
 						UserID: input,
-						URL:    "https://extremely-lengthy-url.com/",
+						URL:    "https://lengthy-url.com/",
 					},
 					{
 						ID:     2,

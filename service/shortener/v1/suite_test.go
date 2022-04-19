@@ -32,7 +32,7 @@ func (s *TestSuite) SetupSuite() {
 		DelBufCap:         2,
 	}
 
-	svc, err := New(
+	svc, err := NewService(
 		WithConfig(config),
 		WithStorage(urlStorageMock),
 	)
