@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package urlService;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "pkg/grpc/url-service;urlService";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Url service";
+    version: "1.0";
+  };
+};
+
+service URLService {
+  rpc ShortenURL (ShortenURLReq) returns (ShortenURLResp) {
+    option (google.api.http) = {
+      post: "/gw/shorten"
+      body: "*"
+    };
+  }
+
+  rpc ShortenURLsBatch (ShortenURLsBatchReq) returns (ShortenURLsBatchResp) {
+    option (google.api.http) = {
+      post: "/gw/shorten/batch"
+      body: "*"
+    };
+  }
+
+  rpc GetOriginalURL (GetOrigURLReq) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      get: "/gw/{id}"
+    };
+  }
+
+  rpc GetUsersURLs (google.protobuf.Empty) returns (GetUsersURLsResp) {
+    option (google.api.http) = {
+      get: "/gw/user/urls"
+    };
+  }
+
+  rpc DeleteUserURLs (DelUserURLsReq) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/gw/user/urls"
+      body: "*"
+    };
+  }
+}
+
+// ShortenURL
+message ShortenURLReq {
+  string url = 1 [(validate.rules).string.uri = true];
+}
+
+message ShortenURLResp {
+  string result = 1;
+}
+
+// ShortenURLsBatch
+message ShortenURLsBatchReq {
+  message UrlUnit {
+    string correlation_id = 1;
+    string original_url = 2 [(validate.rules).string.uri = true];
+  }
+
+  repeated UrlUnit request = 1;
+}
+
+message ShortenURLsBatchResp {
+  message UrlUnit {
+    string correlation_id = 1;
+    string short_url = 2;
+  }
+
+  repeated UrlUnit response = 1;
+}
+
+// GetOriginalURL
+message GetOrigURLReq {
+  string id = 1;
+}
+
+// GetUserURLs
+message GetUsersURLsResp {
+  message UrlUnit {
+    string short_url = 1;
+    string original_url = 2;
+  }
+
+  repeated UrlUnit response = 1;
+}
+
+// DeleteUserURLs
+message DelUserURLsReq {
+  repeated string ids = 1;
+}

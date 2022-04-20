@@ -2,11 +2,11 @@
   rows:
     - _id: link_1
       user_id: '{{ uuid }}'
-      url: 'https://extremely-lengthy-url-1.com/'
+      url: 'https://lengthy-url-1.com/'
       created_at: '{{ now }}'
       updated_at: '{{ now }}'
     - _id: link_2
       user_id: '{{ $.URL.link_1.UserID }}'
-      url: 'https://extremely-lengthy-url-2.com/'
+      url: 'https://lengthy-url-2.com/'
       created_at: '{{ now }}'
       updated_at: '{{ now }}'

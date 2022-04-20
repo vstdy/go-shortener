@@ -29,11 +29,11 @@ func (s *TestSuite) TestURLs_AddURLs() {
 	urlsToAdd := []model.URL{
 		{
 			UserID: uuid.New(),
-			URL:    "https://extremely-lengthy-url-3.com/",
+			URL:    "https://lengthy-url-3.com/",
 		},
 		{
 			UserID: uuid.New(),
-			URL:    "https://extremely-lengthy-url-4.com/",
+			URL:    "https://lengthy-url-4.com/",
 		},
 	}
 

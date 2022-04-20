@@ -65,9 +65,9 @@ func gzipCompressResponse(next http.Handler) http.Handler {
 type ctxKeyUserID int
 
 const userIDKey ctxKeyUserID = 0
+const cookieName = "Authorization"
 
 func cookieAuth(secretKey string) func(next http.Handler) http.Handler {
-	cookieName := "Authentication"
 	cipherKey := sha256.Sum256([]byte(secretKey))
 	aesBlock, _ := aes.NewCipher(cipherKey[:])
 	aesGCM, _ := cipher.NewGCM(aesBlock)

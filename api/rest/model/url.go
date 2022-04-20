@@ -8,11 +8,16 @@ import (
 	"github.com/vstdy0/go-shortener/model"
 )
 
+// newShortcut returns shortcut for object.
+func newShortcut(objID int, baseURL string) string {
+	return baseURL + "/" + strconv.Itoa(objID)
+}
+
 type AddURLRequest struct {
 	URL string `json:"url"`
 }
 
-// ToCanonical converts a API model to canonical model.
+// ToCanonical converts API model to canonical model.
 func (u AddURLRequest) ToCanonical(userID uuid.UUID) model.URL {
 	obj := model.URL{
 		UserID: userID,
@@ -33,7 +38,7 @@ type AddURLResponse struct {
 
 // NewURLRespFromCanon creates AddURLResponse object from canonical model.
 func NewURLRespFromCanon(obj model.URL, baseURL string) AddURLResponse {
-	return AddURLResponse{Result: baseURL + "/" + strconv.Itoa(obj.ID)}
+	return AddURLResponse{Result: newShortcut(obj.ID, baseURL)}
 }
 
 type (
@@ -45,7 +50,7 @@ type (
 	AddURLsBatchReq []urlInBatch
 )
 
-// ToCanonical converts a API model to canonical model.
+// ToCanonical converts API model to canonical model.
 func (u AddURLsBatchReq) ToCanonical(userID uuid.UUID) ([]model.URL, error) {
 	var objs []model.URL
 	for _, url := range u {
@@ -68,10 +73,10 @@ type AddURLsBatchResp struct {
 // from array of canonical models.
 func NewURLsBatchRespFromCanon(objs []model.URL, baseURL string) []AddURLsBatchResp {
 	var urls []AddURLsBatchResp
-	for _, url := range objs {
+	for _, obj := range objs {
 		urls = append(urls, AddURLsBatchResp{
-			CorrelationID: url.CorrelationID,
-			ShortURL:      baseURL + "/" + strconv.Itoa(url.ID),
+			CorrelationID: obj.CorrelationID,
+			ShortURL:      newShortcut(obj.ID, baseURL),
 		})
 	}
 
@@ -85,13 +90,13 @@ type UserURL struct {
 
 // NewUserURLsFromCanon creates array of UserURL objects
 // from array of canonical models.
-func NewUserURLsFromCanon(urls []model.URL, baseURL string) []UserURL {
+func NewUserURLsFromCanon(objs []model.URL, baseURL string) []UserURL {
 	var userURLs []UserURL
-	for _, v := range urls {
+	for _, obj := range objs {
 		userURLs = append(userURLs,
 			UserURL{
-				ShortURL:    baseURL + "/" + strconv.Itoa(v.ID),
-				OriginalURL: v.URL,
+				ShortURL:    newShortcut(obj.ID, baseURL),
+				OriginalURL: obj.URL,
 			})
 	}
 
@@ -106,6 +111,7 @@ func URLsToDelToCanon(ids []string, userID uuid.UUID) ([]model.URL, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		objs = append(objs, model.URL{
 			ID:     id,
 			UserID: userID,

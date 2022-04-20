@@ -42,12 +42,13 @@ func (s *TestSuite) SetupSuite() {
 		Timeout: timeout,
 	}
 
-	r := NewRouter(ServiceMock, config)
+	r, err := NewRouter(ServiceMock, config)
+	s.Require().NoError(err)
 	srv := httptest.NewServer(r)
 
 	userID := uuid.MustParse("c92d627d-96f1-416f-9c70-75d7504e161e")
 	cookie := &http.Cookie{
-		Name:  "Authentication",
+		Name:  cookieName,
 		Value: "ov//cWHlDr/8sG2iaSS7/K/QQ/K3X6/cM0cQIXiEZfj0PxLRoh784IF5qDopw1ilxCDMHg==",
 		Path:  "/",
 	}

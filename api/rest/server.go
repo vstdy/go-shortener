@@ -6,13 +6,16 @@ import (
 	"github.com/vstdy0/go-shortener/service/shortener/v1"
 )
 
-// NewServer returns server.
+// NewServer returns new rest server.
 func NewServer(svc *shortener.Service, config Config) (*http.Server, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
 
-	router := NewRouter(svc, config)
+	router, err := NewRouter(svc, config)
+	if err != nil {
+		return nil, err
+	}
 
 	return &http.Server{Addr: config.ServerAddress, Handler: router}, nil
 }
