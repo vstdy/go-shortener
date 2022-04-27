@@ -97,7 +97,7 @@ GRPC 127.0.0.1:50051/urlService.URLService/DeleteUserURLs
 
 {
   "ids": [
-    "1",
+    "2",
     "3"
   ]
 }
@@ -131,7 +131,7 @@ Content-Type: application/json
 
 ### 16. Get origin url from shortcut
 # @no-redirect
-GET {{server_address}}/gw/11
+GET {{server_address}}/gw/1
 
 ### 17. Get urls created by current user
 GET {{server_address}}/gw/user/urls
@@ -142,7 +142,7 @@ Content-Type: application/json
 
 {
   "ids": [
-    "1",
+    "2",
     "3"
   ]
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
-	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/cmd/shortener/cmd/common"
+	"github.com/vstdy/go-shortener/pkg/logging"
 )
 
 // newMigrateCmd creates a new migrate command.
@@ -16,7 +16,7 @@ func newMigrateCmd() *cobra.Command {
 		Short: "Migrate DB to the latest version",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := common.GetConfigFromCmdCtx(cmd)
-			logger := logging.NewLogger(logging.WithLogLevel(config.LogLevel))
+			ctx, logger := logging.GetCtxLogger(context.Background(), logging.WithLogLevel(config.LogLevel))
 
 			st, err := config.BuildPsqlStorage()
 			if err != nil {
@@ -28,9 +28,8 @@ func newMigrateCmd() *cobra.Command {
 				}
 			}()
 
-			ctx, ctxCancel := context.WithTimeout(context.Background(), config.Timeout)
+			ctx, ctxCancel := context.WithTimeout(ctx, config.Timeout)
 			defer ctxCancel()
-			ctx = logging.SetCtxLogger(ctx, logger)
 
 			if err = st.Migrate(ctx); err != nil {
 				return err

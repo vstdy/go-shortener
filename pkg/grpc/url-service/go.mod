@@ -1,4 +1,4 @@
-module github.com/vstdy0/go-shortener/pkg/grpc/url-service
+module github.com/vstdy/go-shortener/pkg/grpc/url-service
 
 go 1.17
 

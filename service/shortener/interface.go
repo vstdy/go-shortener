@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
+	"github.com/vstdy/go-shortener/model"
 )
 
 type Service interface {
@@ -19,10 +19,10 @@ type Service interface {
 	AddURLsBatch(ctx context.Context, objs *[]model.URL) error
 	// GetURL gets object with given id.
 	GetURL(ctx context.Context, urlID int) (string, error)
-	// GetUserURLs gets current user objects.
-	GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
-	// RemoveUserURLs removes current user objects with given ids.
-	RemoveUserURLs(ctx context.Context, objs []model.URL) error
+	// GetUsersURLs gets current user objects.
+	GetUsersURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error)
+	// RemoveUsersURLs removes current user objects with given ids.
+	RemoveUsersURLs(ctx context.Context, objs []model.URL) error
 	// Ping verifies a connection to the database is still alive.
 	Ping() error
 }

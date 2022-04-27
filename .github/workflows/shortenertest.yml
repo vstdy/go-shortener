@@ -46,7 +46,10 @@ jobs:
         run: |
           cd cmd/shortener
           go build -o shortener
-          ./shortener migrate -d 'postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
+
+      - name: Make migrations
+        run: |
+          ./cmd/shortener/shortener migrate -d 'postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #1"
         if: always()

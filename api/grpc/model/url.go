@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg/grpc/url-service"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg/grpc/url-service"
 )
 
 // newShortcut returns shortcut for object.

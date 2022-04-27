@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
-	servicemock "github.com/vstdy0/go-shortener/service/shortener/mock"
+	servicemock "github.com/vstdy/go-shortener/service/shortener/mock"
 )
 
 type TestSuite struct {

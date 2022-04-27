@@ -8,10 +8,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	rest "github.com/vstdy0/go-shortener/api/rest/model"
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg"
-	serviceMock "github.com/vstdy0/go-shortener/service/shortener/mock"
+	rest "github.com/vstdy/go-shortener/api/rest/model"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg"
+	serviceMock "github.com/vstdy/go-shortener/service/shortener/mock"
 )
 
 func (s *TestSuite) TestServer_shortenURL() {
@@ -502,7 +502,7 @@ func (s *TestSuite) TestServer_getUserURLs() {
 			name: "OK: no content",
 			prepareMocks: func(ServiceMock *serviceMock.MockService) []model.URL {
 				ServiceMock.EXPECT().
-					GetUserURLs(gomock.Any(), s.userID).
+					GetUsersURLs(gomock.Any(), s.userID).
 					Return(nil, nil)
 
 				return nil
@@ -536,7 +536,7 @@ func (s *TestSuite) TestServer_getUserURLs() {
 				}
 
 				ServiceMock.EXPECT().
-					GetUserURLs(gomock.Any(), s.userID).
+					GetUsersURLs(gomock.Any(), s.userID).
 					Return(output, nil)
 
 				return output
@@ -600,7 +600,7 @@ func (s *TestSuite) TestServer_deleteUserURLs() {
 			name: "Fail: invalid input",
 			prepareMocks: func(ServiceMock *serviceMock.MockService) {
 				ServiceMock.EXPECT().
-					RemoveUserURLs(gomock.Any(), nil).
+					RemoveUsersURLs(gomock.Any(), nil).
 					Return(pkg.ErrInvalidInput)
 			},
 			request: request{
@@ -630,7 +630,7 @@ func (s *TestSuite) TestServer_deleteUserURLs() {
 				}
 
 				ServiceMock.EXPECT().
-					RemoveUserURLs(gomock.Any(), input).
+					RemoveUsersURLs(gomock.Any(), input).
 					Return(nil)
 			},
 			request: request{

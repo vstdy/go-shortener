@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/pkg/logging"
 )
 
 // loggerOption customises logger context fields.

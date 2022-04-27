@@ -3,9 +3,9 @@ package memory
 import (
 	"sync"
 
-	"github.com/vstdy0/go-shortener/pkg"
-	inter "github.com/vstdy0/go-shortener/storage"
-	"github.com/vstdy0/go-shortener/storage/memory/schema"
+	"github.com/vstdy/go-shortener/pkg"
+	inter "github.com/vstdy/go-shortener/storage"
+	"github.com/vstdy/go-shortener/storage/memory/schema"
 )
 
 var _ inter.Storage = (*Storage)(nil)

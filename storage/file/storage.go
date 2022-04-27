@@ -7,9 +7,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/vstdy0/go-shortener/pkg"
-	inter "github.com/vstdy0/go-shortener/storage"
-	"github.com/vstdy0/go-shortener/storage/file/schema"
+	"github.com/vstdy/go-shortener/pkg"
+	inter "github.com/vstdy/go-shortener/storage"
+	"github.com/vstdy/go-shortener/storage/file/schema"
 )
 
 var _ inter.Storage = (*Storage)(nil)

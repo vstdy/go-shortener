@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/vstdy0/go-shortener/service/shortener/v1"
+	"github.com/vstdy/go-shortener/service/shortener/v1"
 )
 
 // NewServer returns new rest server.

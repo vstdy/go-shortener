@@ -7,15 +7,15 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg"
-	"github.com/vstdy0/go-shortener/pkg/tracing"
-	"github.com/vstdy0/go-shortener/service/shortener/v1/validator"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/pkg/tracing"
+	"github.com/vstdy/go-shortener/service/shortener/v1/validator"
 )
 
 // AddURL adds given object to storage.
 func (svc *Service) AddURL(ctx context.Context, obj *model.URL) (err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URL")
+	ctx, span := tracing.StartSpanFromCtx(ctx, "shortener AddURL")
 	defer tracing.FinishSpan(span, err)
 
 	if err = validator.ValidateURL(obj.URL); err != nil {
@@ -27,7 +27,7 @@ func (svc *Service) AddURL(ctx context.Context, obj *model.URL) (err error) {
 		if errors.Is(err, pkg.ErrAlreadyExists) {
 			obj.ID = objs[0].ID
 		}
-		return err
+		return fmt.Errorf("shortener: AddURL: %w", err)
 	}
 
 	obj.ID = objs[0].ID
@@ -37,7 +37,7 @@ func (svc *Service) AddURL(ctx context.Context, obj *model.URL) (err error) {
 
 // AddURLsBatch adds given batch of objects to storage.
 func (svc *Service) AddURLsBatch(ctx context.Context, objs *[]model.URL) (err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URLs batch")
+	ctx, span := tracing.StartSpanFromCtx(ctx, "shortener AddURLsBatch")
 	defer tracing.FinishSpan(span, err)
 
 	if *objs == nil {
@@ -46,10 +46,10 @@ func (svc *Service) AddURLsBatch(ctx context.Context, objs *[]model.URL) (err er
 
 	for _, obj := range *objs {
 		if err = validator.ValidateURL(obj.URL); err != nil {
-			return fmt.Errorf("%w: url: %v", pkg.ErrInvalidInput, err)
+			return fmt.Errorf("shortener: %w: url: %v", pkg.ErrInvalidInput, err)
 		}
 		if obj.CorrelationID == "" {
-			return fmt.Errorf("%w: correlation_id: empty", pkg.ErrInvalidInput)
+			return fmt.Errorf("shortener: %w: correlation_id: empty", pkg.ErrInvalidInput)
 		}
 	}
 
@@ -58,7 +58,7 @@ func (svc *Service) AddURLsBatch(ctx context.Context, objs *[]model.URL) (err er
 		if errors.Is(err, pkg.ErrAlreadyExists) {
 			*objs = addedObjs
 		}
-		return err
+		return fmt.Errorf("shortener: AddURLsBatch: %w", err)
 	}
 
 	*objs = addedObjs
@@ -68,41 +68,41 @@ func (svc *Service) AddURLsBatch(ctx context.Context, objs *[]model.URL) (err er
 
 // GetURL gets object with given id.
 func (svc *Service) GetURL(ctx context.Context, id int) (url string, err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Get URL")
+	ctx, span := tracing.StartSpanFromCtx(ctx, "shortener GetURL")
 	defer tracing.FinishSpan(span, err)
 
 	if id < 1 {
-		return "", fmt.Errorf("%w: id: less than 1", pkg.ErrInvalidInput)
+		return "", fmt.Errorf("shortener: GetURL: %w: id: less than 1", pkg.ErrInvalidInput)
 	}
 
 	urlModel, err := svc.storage.GetURL(ctx, id)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("shortener: GetURL: %w", err)
 	}
 
 	return urlModel.URL, nil
 }
 
-// GetUserURLs gets current user objects.
-func (svc *Service) GetUserURLs(ctx context.Context, userID uuid.UUID) (objs []model.URL, err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Get user URLs")
+// GetUsersURLs gets current user objects.
+func (svc *Service) GetUsersURLs(ctx context.Context, userID uuid.UUID) (objs []model.URL, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "shortener GetUsersURLs")
 	defer tracing.FinishSpan(span, err)
 
-	objs, err = svc.storage.GetUserURLs(ctx, userID)
+	objs, err = svc.storage.GetUsersURLs(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("shortener: GetUsersURLs: %w", err)
 	}
 
 	return objs, nil
 }
 
-// RemoveUserURLs removes current user objects with given ids.
-func (svc *Service) RemoveUserURLs(ctx context.Context, objs []model.URL) (err error) {
-	_, span := tracing.StartSpanFromCtx(ctx, "Remove user URLs")
+// RemoveUsersURLs removes current user objects with given ids.
+func (svc *Service) RemoveUsersURLs(ctx context.Context, objs []model.URL) (err error) {
+	_, span := tracing.StartSpanFromCtx(ctx, "shortener RemoveUsersURLs")
 	defer tracing.FinishSpan(span, err)
 
 	if len(objs) == 0 {
-		return fmt.Errorf("%w: ids: empty", pkg.ErrInvalidInput)
+		return fmt.Errorf("shortener: RemoveUsersURLs: %w: ids: empty", pkg.ErrInvalidInput)
 	}
 
 	go func() {

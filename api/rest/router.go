@@ -6,8 +6,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/vstdy0/go-shortener/api/grpc-gateway"
-	"github.com/vstdy0/go-shortener/service/shortener"
+	"github.com/vstdy/go-shortener/api/grpc-gateway"
+	"github.com/vstdy/go-shortener/service/shortener"
 )
 
 // NewRouter returns router.

@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	storagemock "github.com/vstdy0/go-shortener/storage/mock"
+	storagemock "github.com/vstdy/go-shortener/storage/mock"
 )
 
 type TestSuite struct {

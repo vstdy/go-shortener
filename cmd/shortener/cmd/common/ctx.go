@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/pkg"
 )
 
 const (

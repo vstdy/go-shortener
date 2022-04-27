@@ -11,9 +11,9 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
 
-	inter "github.com/vstdy0/go-shortener/storage"
-	"github.com/vstdy0/go-shortener/storage/psql/migrations"
-	"github.com/vstdy0/go-shortener/storage/psql/schema"
+	inter "github.com/vstdy/go-shortener/storage"
+	"github.com/vstdy/go-shortener/storage/psql/migrations"
+	"github.com/vstdy/go-shortener/storage/psql/schema"
 )
 
 const (

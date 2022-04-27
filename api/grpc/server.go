@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 
-	"github.com/vstdy0/go-shortener/pkg/grpc/url-service"
-	"github.com/vstdy0/go-shortener/service/shortener"
+	"github.com/vstdy/go-shortener/pkg/grpc/url-service"
+	"github.com/vstdy/go-shortener/service/shortener"
 )
 
 var _ urlService.URLServiceServer = (*gRPCServer)(nil)

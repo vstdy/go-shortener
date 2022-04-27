@@ -13,11 +13,11 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/rs/zerolog"
 
-	"github.com/vstdy0/go-shortener/api/rest/model"
-	"github.com/vstdy0/go-shortener/pkg"
-	"github.com/vstdy0/go-shortener/pkg/logging"
-	"github.com/vstdy0/go-shortener/pkg/tracing"
-	"github.com/vstdy0/go-shortener/service/shortener"
+	"github.com/vstdy/go-shortener/api/rest/model"
+	"github.com/vstdy/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/pkg/tracing"
+	"github.com/vstdy/go-shortener/service/shortener"
 )
 
 const (
@@ -195,7 +195,7 @@ func (h Handler) getUsersURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urls, err := h.service.GetUserURLs(ctx, userID)
+	urls, err := h.service.GetUsersURLs(ctx, userID)
 	if err != nil {
 		logger.Warn().Err(err).Msg("Getting user URLs:")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -248,7 +248,7 @@ func (h Handler) deleteUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.RemoveUserURLs(ctx, objs)
+	err = h.service.RemoveUsersURLs(ctx, objs)
 	if err != nil {
 		if errors.Is(err, pkg.ErrInvalidInput) {
 			http.Error(w, err.Error(), http.StatusBadRequest)

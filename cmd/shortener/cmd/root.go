@@ -13,11 +13,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vstdy0/go-shortener/api/grpc"
-	"github.com/vstdy0/go-shortener/api/rest"
-	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
-	"github.com/vstdy0/go-shortener/pkg/logging"
-	"github.com/vstdy0/go-shortener/pkg/tracing"
+	"github.com/vstdy/go-shortener/api/grpc"
+	"github.com/vstdy/go-shortener/api/rest"
+	"github.com/vstdy/go-shortener/cmd/shortener/cmd/common"
+	"github.com/vstdy/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/pkg/tracing"
 )
 
 const (
@@ -37,7 +37,7 @@ func Execute() error {
 	return newRootCmd().ExecuteContext(common.NewBaseCmdCtx())
 }
 
-// newRootCmd creates a new root cmd.
+// newRootCmd creates a new root command.
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

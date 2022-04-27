@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg"
 )
 
 func (s *TestSuite) TestURLs_HasURL() {
@@ -77,7 +77,7 @@ func (s *TestSuite) TestURLs_GetURL() {
 
 func (s *TestSuite) TestURLs_GetUserURLs() {
 	s.Run("Get non-existing user urls", func() {
-		res, err := s.storage.GetUserURLs(s.ctx, uuid.New())
+		res, err := s.storage.GetUsersURLs(s.ctx, uuid.New())
 		s.Require().NoError(err)
 		s.Require().Nil(res)
 	})
@@ -86,7 +86,7 @@ func (s *TestSuite) TestURLs_GetUserURLs() {
 		existingURLs, err := s.fixtures.URLS.ToCanonical()
 		s.Require().NoError(err)
 
-		res, err := s.storage.GetUserURLs(s.ctx, existingURLs[0].UserID)
+		res, err := s.storage.GetUsersURLs(s.ctx, existingURLs[0].UserID)
 		s.Require().NoError(err)
 		s.Assert().EqualValues(existingURLs, res)
 	})
@@ -107,7 +107,7 @@ func (s *TestSuite) TestURLs_RemoveUserURLs() {
 	}
 
 	s.Run("Remove urls by creator", func() {
-		err := s.storage.RemoveUserURLs(s.ctx, userURLs)
+		err := s.storage.RemoveUsersURLs(s.ctx, userURLs)
 		s.Require().NoError(err)
 
 		res, err := s.storage.GetURL(s.ctx, 1)
@@ -116,7 +116,7 @@ func (s *TestSuite) TestURLs_RemoveUserURLs() {
 	})
 
 	s.Run("Remove urls by non-creator", func() {
-		err := s.storage.RemoveUserURLs(s.ctx, foreignURLs)
+		err := s.storage.RemoveUsersURLs(s.ctx, foreignURLs)
 		s.Require().NoError(err)
 
 		expectedURL := s.fixtures.URLS[1].ToCanonical()

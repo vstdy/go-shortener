@@ -13,7 +13,7 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dbfixture"
 
-	"github.com/vstdy0/go-shortener/storage/psql/schema"
+	"github.com/vstdy/go-shortener/storage/psql/schema"
 )
 
 // Fixtures keeps all fixture objects.

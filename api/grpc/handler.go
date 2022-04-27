@@ -13,9 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/vstdy0/go-shortener/api/grpc/model"
-	"github.com/vstdy0/go-shortener/pkg"
-	"github.com/vstdy0/go-shortener/pkg/grpc/url-service"
+	"github.com/vstdy/go-shortener/api/grpc/model"
+	"github.com/vstdy/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/pkg/grpc/url-service"
 )
 
 // ShortenURL creates shortcut for given url.
@@ -132,7 +132,7 @@ func (srv *gRPCServer) GetUsersURLs(
 		return nil, status.Error(codes.Internal, "context: failed to retrieve user_id")
 	}
 
-	urls, err := srv.service.GetUserURLs(ctx, userID)
+	urls, err := srv.service.GetUsersURLs(ctx, userID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -157,7 +157,7 @@ func (srv *gRPCServer) DeleteUserURLs(
 		return nil, status.Error(codes.InvalidArgument, pkg.ErrInvalidInput.Error())
 	}
 
-	err = srv.service.RemoveUserURLs(ctx, objs)
+	err = srv.service.RemoveUsersURLs(ctx, objs)
 	if err != nil {
 		if errors.Is(err, pkg.ErrInvalidInput) {
 			return nil, status.Error(codes.InvalidArgument, pkg.ErrInvalidInput.Error())

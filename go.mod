@@ -1,4 +1,4 @@
-module github.com/vstdy0/go-shortener
+module github.com/vstdy/go-shortener
 
 go 1.17
 
@@ -23,12 +23,12 @@ require (
 	github.com/uptrace/bun/dbfixture v1.1.3
 	github.com/uptrace/bun/dialect/pgdialect v1.1.3
 	github.com/uptrace/bun/driver/pgdriver v1.1.3
-	github.com/vstdy0/go-shortener/pkg/grpc/url-service v0.0.0
+	github.com/vstdy/go-shortener/pkg/grpc/url-service v0.0.0
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.28.0
 )
 
-replace github.com/vstdy0/go-shortener/pkg/grpc/url-service => ./pkg/grpc/url-service
+replace github.com/vstdy/go-shortener/pkg/grpc/url-service => ./pkg/grpc/url-service
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect

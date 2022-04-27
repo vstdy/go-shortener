@@ -6,14 +6,14 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vstdy0/go-shortener/api/grpc"
-	"github.com/vstdy0/go-shortener/api/rest"
-	"github.com/vstdy0/go-shortener/pkg"
-	"github.com/vstdy0/go-shortener/service/shortener/v1"
-	"github.com/vstdy0/go-shortener/storage"
-	"github.com/vstdy0/go-shortener/storage/file"
-	"github.com/vstdy0/go-shortener/storage/memory"
-	"github.com/vstdy0/go-shortener/storage/psql"
+	"github.com/vstdy/go-shortener/api/grpc"
+	"github.com/vstdy/go-shortener/api/rest"
+	"github.com/vstdy/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/service/shortener/v1"
+	"github.com/vstdy/go-shortener/storage"
+	"github.com/vstdy/go-shortener/storage/file"
+	"github.com/vstdy/go-shortener/storage/memory"
+	"github.com/vstdy/go-shortener/storage/psql"
 )
 
 // Config combines sub-configs for all services, storages and providers.

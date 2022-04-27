@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/storage/file/schema"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/storage/file/schema"
 )
 
 // HasURL checks existence of the url object with given id
@@ -56,8 +56,8 @@ func (st *Storage) GetURL(ctx context.Context, urlID int) (model.URL, error) {
 	return url.ToCanonical(), nil
 }
 
-// GetUserURLs gets current user url objects
-func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
+// GetUsersURLs gets current user url objects
+func (st *Storage) GetUsersURLs(ctx context.Context, userID uuid.UUID) ([]model.URL, error) {
 	st.RLock()
 	defer st.RUnlock()
 
@@ -71,8 +71,8 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) ([]model.U
 	return urls.ToCanonical(), nil
 }
 
-// RemoveUserURLs removes current user url objects with given ids
-func (st *Storage) RemoveUserURLs(ctx context.Context, objs []model.URL) error {
+// RemoveUsersURLs removes current user url objects with given ids
+func (st *Storage) RemoveUsersURLs(ctx context.Context, objs []model.URL) error {
 
 	return nil
 }

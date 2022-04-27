@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/vstdy0/go-shortener/pkg/grpc/url-service"
+	"github.com/vstdy/go-shortener/pkg/grpc/url-service"
 )
 
 func NewMux(grpcSrvAddr string) (*runtime.ServeMux, error) {

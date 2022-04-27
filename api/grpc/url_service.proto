@@ -84,7 +84,7 @@ message GetOrigURLReq {
   string id = 1;
 }
 
-// GetUserURLs
+// GetUsersURLs
 message GetUsersURLsResp {
   message UrlUnit {
     string short_url = 1;

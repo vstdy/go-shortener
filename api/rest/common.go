@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/api/rest/model"
-	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/api/rest/model"
+	"github.com/vstdy/go-shortener/pkg"
 )
 
 func (h Handler) jsonURLResponse(ctx context.Context, userID uuid.UUID, body []byte) ([]byte, error) {

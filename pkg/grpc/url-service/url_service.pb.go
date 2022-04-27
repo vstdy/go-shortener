@@ -262,7 +262,7 @@ func (x *GetOrigURLReq) GetId() string {
 	return ""
 }
 
-// GetUserURLs
+// GetUsersURLs
 type GetUsersURLsResp struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

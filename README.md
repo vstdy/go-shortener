@@ -1,7 +1,7 @@
 # Shortener
 
 The application is a tool that creates a short, unique URL that will redirect to the specific website of your choosing.  
-Is a project of the [course](https://practicum.yandex.ru/profile/go-developer/)
+Is a project of the [course](https://practicum.yandex.ru/promo/go-profession/)
 
 ## REST API
 
@@ -45,7 +45,7 @@ Testing:
 ## CLI
 
 All CLI commands have the following flags:
-- `--log-level`: (optional) set logging level (default: `info`);
+- `--log_level`: (optional) logging level (default: `info`);
 - `--config`: (optional) path to configuration file (default: `./config.toml`);
 - `--timeout`: (optional) request timeout (default: `5s`);
 - `-d --database_dsn`: (optional) database source name (default: `postgres://user:password@localhost:5432/shortener?sslmode=disable`);
@@ -53,8 +53,8 @@ All CLI commands have the following flags:
 Root only command flags:
 - `-a --server_address`: (optional) server address (default: `0.0.0.0:8080`);
 - `-b --base_url`: (optional) base URL (default: `http://127.0.0.1:8080`);
-- `-s --storage_type`: (optional) set logging level (default: `psql`);
-- `-f --file_storage_path`: (optional) set logging level (default: `./storage/file/storage_file.txt`);
+- `-s --storage_type`: (optional) storage type (default: `psql`);
+- `-f --file_storage_path`: (optional) file storage path (default: `./storage/file/storage_file.txt`);
 
 If config file not specified, defaults are used. Defaults can be overwritten using ENV variables.
 
@@ -95,7 +95,7 @@ Command migrates DB to the latest version
     shortener client delete 1 3
     ```
    Arguments:
-   - `args[0] args[1]...`: urls ids to delete
+   - `args[0] args[1]...`: ids of urls to delete
 
 Flags:
 - `-t --token`: (optional) user's token;

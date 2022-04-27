@@ -9,10 +9,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg/logging"
-	"github.com/vstdy0/go-shortener/service/shortener"
-	inter "github.com/vstdy0/go-shortener/storage"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/service/shortener"
+	inter "github.com/vstdy/go-shortener/storage"
 )
 
 const (
@@ -91,8 +91,8 @@ func (svc *Service) Close() error {
 	return nil
 }
 
-// Log returns logger with service field set.
-func (svc *Service) Log(ctx context.Context) *zerolog.Logger {
+// Logger returns logger with service field set.
+func (svc *Service) Logger(ctx context.Context) *zerolog.Logger {
 	_, logger := logging.GetCtxLogger(ctx)
 	logger = logger.With().Str(logging.ServiceKey, serviceName).Logger()
 
@@ -109,7 +109,7 @@ func (svc *Service) delWorker(config Config) {
 		ctx, cancel := context.WithTimeout(context.Background(), config.DelReqTimeout)
 		defer cancel()
 
-		err := svc.storage.RemoveUserURLs(ctx, delObjs)
+		err := svc.storage.RemoveUsersURLs(ctx, delObjs)
 		if err != nil {
 			log.Warn().Err(err).Msg("Objects deletion failed")
 		}

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
-	"github.com/vstdy0/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/pkg"
 )
 
 const (

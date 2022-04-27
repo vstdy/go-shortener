@@ -7,9 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg"
-	storageMock "github.com/vstdy0/go-shortener/storage/mock"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg"
+	storageMock "github.com/vstdy/go-shortener/storage/mock"
 )
 
 func (s *TestSuite) TestService_AddURL() {
@@ -324,7 +324,7 @@ func (s *TestSuite) TestService_GetUsersURLs() {
 				}
 
 				StorageMock.EXPECT().
-					GetUserURLs(gomock.Any(), input).
+					GetUsersURLs(gomock.Any(), input).
 					Return(urls, nil)
 
 				return input
@@ -337,7 +337,7 @@ func (s *TestSuite) TestService_GetUsersURLs() {
 		s.Run(tc.name, func() {
 			input := tc.prepareMocks(s.stMock)
 
-			_, err := s.svc.GetUserURLs(s.ctx, input)
+			_, err := s.svc.GetUsersURLs(s.ctx, input)
 			if tc.errExpected {
 				s.Assert().Error(err)
 				if tc.errTarget != nil {
@@ -390,7 +390,7 @@ func (s *TestSuite) TestService_RemoveUserURLs() {
 				s.Add(1)
 
 				StorageMock.EXPECT().
-					RemoveUserURLs(gomock.Any(), input).
+					RemoveUsersURLs(gomock.Any(), input).
 					Do(func(ctx context.Context, objs []model.URL) { s.Done() }).
 					Return(nil)
 
@@ -411,7 +411,7 @@ func (s *TestSuite) TestService_RemoveUserURLs() {
 				s.Add(1)
 
 				StorageMock.EXPECT().
-					RemoveUserURLs(gomock.Any(), input).
+					RemoveUsersURLs(gomock.Any(), input).
 					Do(func(ctx context.Context, objs []model.URL) { s.Done() }).
 					Return(nil)
 
@@ -425,7 +425,7 @@ func (s *TestSuite) TestService_RemoveUserURLs() {
 		s.Run(tc.name, func() {
 			input := tc.prepareMocks(s.stMock)
 
-			err := s.svc.RemoveUserURLs(s.ctx, input)
+			err := s.svc.RemoveUsersURLs(s.ctx, input)
 			if tc.errExpected {
 				s.Assert().Error(err)
 				if tc.errTarget != nil {

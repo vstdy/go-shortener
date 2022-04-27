@@ -34,4 +34,4 @@ build-proto:
 
 .PHONY: generate
 generate:
-	buf generate --path api/grpc/url_service.proto
+	buf generate

@@ -5,10 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/vstdy0/go-shortener/storage/psql/fixtures"
-	"github.com/vstdy0/go-shortener/testutils"
+	"github.com/vstdy/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/storage/psql/fixtures"
+	"github.com/vstdy/go-shortener/testutils"
 )
 
 type TestSuite struct {
@@ -22,10 +24,11 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupSuite() {
-	ctx, ctxCancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, _ := logging.GetCtxLogger(context.Background(), logging.WithLogLevel(zerolog.InfoLevel))
+	setupCtx, ctxCancel := context.WithTimeout(ctx, time.Minute)
 	defer ctxCancel()
 
-	c, err := testutils.NewPostgreSQLContainer(ctx)
+	c, err := testutils.NewPostgreSQLContainer(setupCtx)
 	s.Require().NoError(err)
 
 	stCfg := NewDefaultConfig()
@@ -34,12 +37,12 @@ func (s *TestSuite) SetupSuite() {
 	st, err := NewStorage(WithConfig(stCfg))
 	s.Require().NoError(err)
 
-	s.Require().NoError(st.Migrate(ctx))
+	s.Require().NoError(st.Migrate(setupCtx))
 
-	fixts, err := fixtures.LoadFixtures(ctx, st.db)
+	fixts, err := fixtures.LoadFixtures(setupCtx, st.db)
 	s.Require().NoError(err)
 
-	s.ctx = context.TODO()
+	s.ctx = ctx
 	s.container = c
 	s.storage = st
 	s.fixtures = fixts

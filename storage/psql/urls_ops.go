@@ -4,36 +4,43 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-shortener/model"
-	"github.com/vstdy0/go-shortener/pkg"
-	"github.com/vstdy0/go-shortener/pkg/tracing"
-	"github.com/vstdy0/go-shortener/storage/psql/schema"
+	"github.com/vstdy/go-shortener/model"
+	"github.com/vstdy/go-shortener/pkg"
+	"github.com/vstdy/go-shortener/pkg/tracing"
+	"github.com/vstdy/go-shortener/storage/psql/schema"
 )
 
 const tableName = "url"
 
 // HasURL checks existence of the url object with given id
 func (st *Storage) HasURL(ctx context.Context, id int) (exists bool, err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Has URL")
+	ctx, span := tracing.StartSpanFromCtx(ctx, "psql HasURL")
 	defer tracing.FinishSpan(span, err)
+
+	logger := st.Logger(ctx, withTable(tableName), withOperation("HasURL"))
 
 	exists, err = st.db.NewSelect().
 		Model(&schema.URL{}).
 		Where("id = ?", id).
 		Exists(ctx)
+	if err != nil {
+		logger.Warn().Err(err).Msgf("check existence of URL with id: %v", id)
+		return false, fmt.Errorf("psql: HasURL: %w", err)
+	}
 
 	return exists, err
 }
 
 // AddURLs adds given url objects to storage
 func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) (retObjs []model.URL, err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Add URLs")
+	ctx, span := tracing.StartSpanFromCtx(ctx, "psql AddURLs")
 	defer tracing.FinishSpan(span, err)
 
-	logger := st.Logger(ctx, withTable(tableName), withOperation("insert"))
+	logger := st.Logger(ctx, withTable(tableName), withOperation("AddURLs"))
 
 	dbObjs := schema.NewURLsFromCanonical(objs)
 
@@ -44,19 +51,18 @@ func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) (retObjs []mod
 		Returning("*, created_at <> updated_at AS updated").
 		Exec(ctx)
 	if err != nil {
-		return nil, err
+		logger.Warn().Err(err).Msgf("add URLs: %v", dbObjs)
+		return nil, fmt.Errorf("psql: AddURLs: %w", err)
 	}
 
 	retObjs, err = dbObjs.ToCanonical()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("psql: AddURLs: converting to canonical: %w", err)
 	}
-
-	logger.Info().Msgf("Objects added %v", retObjs)
 
 	for _, obj := range dbObjs {
 		if obj.Updated {
-			return retObjs, pkg.ErrAlreadyExists
+			return retObjs, fmt.Errorf("psql: AddURLs: %w", pkg.ErrAlreadyExists)
 		}
 	}
 
@@ -65,8 +71,10 @@ func (st *Storage) AddURLs(ctx context.Context, objs []model.URL) (retObjs []mod
 
 // GetURL gets url object with given id
 func (st *Storage) GetURL(ctx context.Context, id int) (obj model.URL, err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Get URL")
+	ctx, span := tracing.StartSpanFromCtx(ctx, "psql GetURL")
 	defer tracing.FinishSpan(span, err)
+
+	logger := st.Logger(ctx, withTable(tableName), withOperation("GetURL"))
 
 	dbObj := schema.URL{}
 
@@ -78,7 +86,9 @@ func (st *Storage) GetURL(ctx context.Context, id int) (obj model.URL, err error
 		if errors.Is(err, sql.ErrNoRows) {
 			return model.URL{}, nil
 		}
-		return model.URL{}, err
+
+		logger.Warn().Err(err).Msgf("get URL with id: %v", id)
+		return model.URL{}, fmt.Errorf("psql: GetURL: %w", err)
 	}
 
 	obj = dbObj.ToCanonical()
@@ -86,10 +96,12 @@ func (st *Storage) GetURL(ctx context.Context, id int) (obj model.URL, err error
 	return obj, nil
 }
 
-// GetUserURLs gets current user url objects
-func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) (objs []model.URL, err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Get user URLs")
+// GetUsersURLs gets current user url objects
+func (st *Storage) GetUsersURLs(ctx context.Context, userID uuid.UUID) (objs []model.URL, err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "psql GetUsersURLs")
 	defer tracing.FinishSpan(span, err)
+
+	logger := st.Logger(ctx, withTable(tableName), withOperation("GetUsersURLs"))
 
 	var dbObjs schema.URLS
 
@@ -98,7 +110,8 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) (objs []mo
 		Where("user_id = ?", userID).
 		Scan(ctx)
 	if err != nil {
-		return nil, err
+		logger.Warn().Err(err).Msgf("get URLs of user with id: %v", userID)
+		return nil, fmt.Errorf("psql: GetUsersURLs: %w", err)
 	}
 	if dbObjs == nil {
 		return nil, nil
@@ -106,35 +119,29 @@ func (st *Storage) GetUserURLs(ctx context.Context, userID uuid.UUID) (objs []mo
 
 	objs, err = dbObjs.ToCanonical()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("psql: GetUsersURLs: converting to canonical: %w", err)
 	}
 
 	return objs, nil
 }
 
-// RemoveUserURLs removes current user url objects with given ids
-func (st *Storage) RemoveUserURLs(ctx context.Context, objs []model.URL) (err error) {
-	ctx, span := tracing.StartSpanFromCtx(ctx, "Remove user URLs")
+// RemoveUsersURLs removes current user url objects with given ids
+func (st *Storage) RemoveUsersURLs(ctx context.Context, objs []model.URL) (err error) {
+	ctx, span := tracing.StartSpanFromCtx(ctx, "psql RemoveUsersURLs")
 	defer tracing.FinishSpan(span, err)
 
-	logger := st.Logger(ctx, withTable(tableName), withOperation("delete"))
+	logger := st.Logger(ctx, withTable(tableName), withOperation("RemoveUsersURLs"))
 
 	dbObjs := schema.NewURLsFromCanonical(objs)
 
-	res, err := st.db.NewDelete().
+	_, err = st.db.NewDelete().
 		Model(&dbObjs).
 		WherePK("id", "user_id").
 		Exec(ctx)
 	if err != nil {
-		return err
+		logger.Warn().Err(err).Msgf("remove following objects: %v", dbObjs)
+		return fmt.Errorf("psql: RemoveUsersURLs: %w", err)
 	}
-
-	affected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	logger.Info().Msgf("%d objects deleted", affected)
 
 	return nil
 }

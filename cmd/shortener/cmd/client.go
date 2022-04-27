@@ -11,11 +11,11 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	apiGrpc "github.com/vstdy0/go-shortener/api/grpc"
-	"github.com/vstdy0/go-shortener/api/grpc/model"
-	"github.com/vstdy0/go-shortener/cmd/shortener/cmd/common"
-	"github.com/vstdy0/go-shortener/pkg/grpc/url-service"
-	"github.com/vstdy0/go-shortener/pkg/logging"
+	apiGrpc "github.com/vstdy/go-shortener/api/grpc"
+	"github.com/vstdy/go-shortener/api/grpc/model"
+	"github.com/vstdy/go-shortener/cmd/shortener/cmd/common"
+	"github.com/vstdy/go-shortener/pkg/grpc/url-service"
+	"github.com/vstdy/go-shortener/pkg/logging"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 
-	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/pkg/logging"
 )
 
 type SpanOption func(span opentracing.Span)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/uptrace/bun"
 
-	"github.com/vstdy0/go-shortener/pkg/logging"
+	"github.com/vstdy/go-shortener/pkg/logging"
 )
 
 type queryHook struct {
