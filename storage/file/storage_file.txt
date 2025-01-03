@@ -1,0 +1,7 @@
+{"id":1,"user_id":"69cdfdef-281a-4aee-ba3c-fe1d20183249","url":"https://practicum.yandex.ru/learn/go-developer/"}
+{"id":5,"user_id":"45707442-5be5-4ad3-ad71-d379f0968d2e","url":"https://practicum.yandex.ru/learn/go-developer/"}
+{"id":6,"user_id":"69cdfdef-281a-4aee-ba3c-fe1d20183249","url":"https://practicum.yandex.ru/learn/go-developer/"}
+{"id":7,"user_id":"69cdfdef-281a-4aee-ba3c-fe1d20183249","url":"https://practicum.yandex.ru/learn/go-developer/"}
+{"id":8,"user_id":"69cdfdef-281a-4aee-ba3c-fe1d20183249","url":"https://practicum.yandex.ru/learn/go-developer/"}
+{"id":9,"user_id":"69cdfdef-281a-4aee-ba3c-fe1d20183249","url":"http://dtph6wri.com/dh3i6dhabm"}
+{"id":10,"user_id":"69cdfdef-281a-4aee-ba3c-fe1d20183249","url":"http://hbrucdf.yandex/ydk0ygkmst9/mwgm82gskxs"}
